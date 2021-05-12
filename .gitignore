@@ -1,3 +1,7 @@
+# Text editors
+\#.*\#
+*~
+
 Makefile.in
 Makefile
 *.o
