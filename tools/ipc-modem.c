@@ -476,6 +476,7 @@ void print_help(void)
 	printf("arguments:\n");
 	printf("\t--call=[NUMBER]       call NUMBER\n");
 	printf("\t--debug               enable debug messages\n");
+	printf("\t--help                print this help message\n");
 	printf("\t--pin=[PIN]           provide SIM card PIN\n");
 }
 
