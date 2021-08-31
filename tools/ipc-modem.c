@@ -469,14 +469,14 @@ void print_help(void)
 {
 	printf("usage: ipc-modem <command>\n");
 	printf("commands:\n");
-	printf("\tstart                 boot modem and start read loop\n");
 	printf("\tboot                  boot modem only\n");
-	printf("\tpower-on              power on the modem\n");
-	printf("\tpower-off             power off the modem\n");
+	printf("\tpower-on              power on the modem only\n");
+	printf("\tpower-off             power off the modem only\n");
+	printf("\tstart                 boot modem and start read loop\n");
 	printf("arguments:\n");
+	printf("\t--call=[NUMBER]       call NUMBER\n");
 	printf("\t--debug               enable debug messages\n");
 	printf("\t--pin=[PIN]           provide SIM card PIN\n");
-	printf("\t--call=[NUMBER]       call NUMBER\n");
 }
 
 int main(int argc, char *argv[])
@@ -488,10 +488,10 @@ int main(int argc, char *argv[])
 	int debug = 0;
 
 	struct option opt_l[] = {
-		{"help",    no_argument,        0,  0 },
-		{"debug",   no_argument,        0,  0 },
-		{"pin",     required_argument,  0,  0 },
 		{"call",    required_argument,  0,  0 },
+		{"debug",   no_argument,        0,  0 },
+		{"help",    no_argument,        0,  0 },
+		{"pin",     required_argument,  0,  0 },
 		{0,         0,                  0,  0 }
 	};
 
@@ -507,25 +507,7 @@ int main(int argc, char *argv[])
 
 		switch (c) {
 		case 0:
-			if (strncmp(opt_l[opt_i].name, "help", 4) == 0) {
-				print_help();
-				exit(1);
-			} else if (strcmp(opt_l[opt_i].name, "debug") == 0) {
-				debug = 1;
-				printf("[I] Debug enabled\n");
-			} else if ((strcmp(opt_l[opt_i].name, "pin") == 0) &&
-				   (optarg)) {
-				if (strlen(optarg) < 8) {
-					assert(strlen(optarg) <
-					       sizeof(sim_pin));
-
-					printf("[I] Got SIM PIN!\n");
-					strcpy(sim_pin, optarg);
-				} else {
-					printf("[E] SIM PIN is too long!\n");
-					return 1;
-				}
-			} else if (strcmp(opt_l[opt_i].name, "call") == 0) {
+			if (strcmp(opt_l[opt_i].name, "call") == 0) {
 				if (optarg) {
 					if (strlen(optarg) < 14) {
 						assert(strlen(optarg) <
@@ -539,6 +521,24 @@ int main(int argc, char *argv[])
 						       "\n");
 						return 1;
 					}
+				}
+			} else if (strcmp(opt_l[opt_i].name, "debug") == 0) {
+				debug = 1;
+				printf("[I] Debug enabled\n");
+			} else if (strncmp(opt_l[opt_i].name, "help", 4) == 0) {
+				print_help();
+				exit(1);
+			} else if ((strcmp(opt_l[opt_i].name, "pin") == 0) &&
+				   (optarg)) {
+				if (strlen(optarg) < 8) {
+					assert(strlen(optarg) <
+					       sizeof(sim_pin));
+
+					printf("[I] Got SIM PIN!\n");
+					strcpy(sim_pin, optarg);
+				} else {
+					printf("[E] SIM PIN is too long!\n");
+					return 1;
 				}
 			}
 
@@ -562,7 +562,12 @@ int main(int argc, char *argv[])
 	}
 
 	while (optind < argc) {
-		if (strncmp(argv[optind], "power-on", 8) == 0) {
+		if (strncmp(argv[optind], "boot", 9) == 0) {
+			rc = ipc_client_boot(client_fmt);
+			if (rc < 0)
+				printf("[E] Something went wrong "
+				       "while bootstrapping modem\n");
+		} else if (strncmp(argv[optind], "power-on", 8) == 0) {
 			if (ipc_client_power_on(client_fmt) < 0)
 				printf("[E] Something went wrong "
 				       "while powering modem on\n");
@@ -572,11 +577,6 @@ int main(int argc, char *argv[])
 				printf("[E] Something went wrong "
 				       "while powering modem off\n");
 			goto modem_quit;
-		} else if (strncmp(argv[optind], "boot", 9) == 0) {
-			rc = ipc_client_boot(client_fmt);
-			if (rc < 0)
-				printf("[E] Something went wrong "
-				       "while bootstrapping modem\n");
 		} else if (strncmp(argv[optind], "start", 5) == 0) {
 			printf("[0] Starting modem on FMT client\n");
 			rc = modem_start(client_fmt);
