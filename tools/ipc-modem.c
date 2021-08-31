@@ -61,6 +61,7 @@ enum command {
 struct cmdline_opts {
 	enum command command;
 	bool debug;
+	bool dry_run;
 };
 
 int seq_get(void)
@@ -421,6 +422,16 @@ int modem_read_loop(struct ipc_client *client)
 	return 0;
 }
 
+int modem_dummy_read_loop(__attribute__((unused)) struct ipc_client *client)
+{
+	while (true) {
+		printf("[I] %s: looping\n", __func__);
+		sleep(1);
+	}
+
+	return 0;
+}
+
 void modem_log_handler(__attribute__((unused)) void *user_data,
 		       const char *msg)
 {
@@ -490,6 +501,8 @@ void print_help(void)
 	printf("arguments:\n");
 	printf("\t--call=[NUMBER]       call NUMBER\n");
 	printf("\t--debug               enable debug messages\n");
+	printf("\t--dry-run             "
+	       "Test the ipc-modem program without talking to the modem.\n");
 	printf("\t--help                print this help message\n");
 	printf("\t--pin=[PIN]           provide SIM card PIN\n");
 }
@@ -499,7 +512,11 @@ int handle_command(struct cmdline_opts *cmdline_opts)
 	struct ipc_client *client_fmt;
 	int rc = 0;
 
-	client_fmt = ipc_client_create(IPC_CLIENT_TYPE_FMT);
+	if (cmdline_opts->dry_run)
+		client_fmt = ipc_client_create(IPC_CLIENT_TYPE_DUMMY);
+	else
+		client_fmt = ipc_client_create(IPC_CLIENT_TYPE_FMT);
+
 	if (client_fmt == 0) {
 		printf("[E] Could not create IPC client; aborting ...\n");
 		goto modem_quit;
@@ -515,32 +532,49 @@ int handle_command(struct cmdline_opts *cmdline_opts)
 
 	switch (cmdline_opts->command) {
 	case CMD_POWER_ON:
+		if (cmdline_opts->dry_run)
+			break;
+
 		rc = ipc_client_power_on(client_fmt);
 		if (rc < 0)
 			printf("[E] Something went wrong "
 			       "while powering modem on\n");
 		goto modem_quit;
 	case CMD_POWER_OFF:
+		if (cmdline_opts->dry_run)
+			break;
+
 		rc = ipc_client_power_off(client_fmt);
 		if (rc < 0)
 			printf("[E] Something went wrong "
 			       "while powering modem off\n");
 		goto modem_quit;
 	case CMD_BOOT:
+		if (cmdline_opts->dry_run)
+			break;
+
 		rc = ipc_client_boot(client_fmt);
 		if (rc < 0)
 			printf("[E] Something went wrong "
 			       "while bootstrapping modem\n");
 		break;
 	case CMD_START:
+		if (cmdline_opts->dry_run) {
+			printf("[1] "
+			       "Starting dummy modem_read_loop on %s client\n",
+				"FMT");
+			modem_dummy_read_loop(client_fmt);
+			break;
+		}
+
 		printf("[0] Starting modem on FMT client\n");
+
 		rc = modem_start(client_fmt);
 		if (rc < 0) {
 			printf("[E] Something went wrong\n");
 			modem_stop(client_fmt);
 			return 1;
 		}
-
 		printf("[1] Starting modem_read_loop on FMT client\n");
 		modem_read_loop(client_fmt);
 
@@ -566,6 +600,8 @@ void print_cmdline_opts(struct cmdline_opts *cmdline_opts)
 {
 	if (cmdline_opts->debug)
 		printf("[I] Debug enabled\n");
+	if (cmdline_opts->debug && cmdline_opts->dry_run)
+		printf("[I] dry-run mode\n");
 }
 
 int main(int argc, char *argv[])
@@ -577,6 +613,7 @@ int main(int argc, char *argv[])
 	struct option opt_l[] = {
 		{"call",    required_argument,  0,  0 },
 		{"debug",   no_argument,        0,  0 },
+		{"dry-run", no_argument,        0,  0 },
 		{"help",    no_argument,        0,  0 },
 		{"pin",     required_argument,  0,  0 },
 		{0,         0,                  0,  0 }
@@ -613,6 +650,8 @@ int main(int argc, char *argv[])
 				}
 			} else if (strcmp(opt_l[opt_i].name, "debug") == 0) {
 				cmdline_opts.debug = true;
+			} else if (strcmp(opt_l[opt_i].name, "dry-run") == 0) {
+				cmdline_opts.dry_run = true;
 			} else if (strncmp(opt_l[opt_i].name, "help", 4) == 0) {
 				print_help();
 				exit(1);
