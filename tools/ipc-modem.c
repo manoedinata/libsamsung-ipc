@@ -26,6 +26,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <strings.h>
 #include <termios.h>
 #include <unistd.h>
 #include <string.h>
@@ -55,6 +56,11 @@ enum command {
 	CMD_BOOT,
 	CMD_POWER_ON,
 	CMD_POWER_OFF,
+};
+
+struct cmdline_opts {
+	enum command command;
+	bool debug;
 };
 
 int seq_get(void)
@@ -488,7 +494,7 @@ void print_help(void)
 	printf("\t--pin=[PIN]           provide SIM card PIN\n");
 }
 
-int handle_command(enum command cmd, bool debug)
+int handle_command(struct cmdline_opts *cmdline_opts)
 {
 	struct ipc_client *client_fmt;
 	int rc = 0;
@@ -499,7 +505,7 @@ int handle_command(enum command cmd, bool debug)
 		goto modem_quit;
 	}
 
-	if (debug == 0) {
+	if (cmdline_opts->debug == 0) {
 		ipc_client_log_callback_register(client_fmt,
 						 modem_log_handler_quiet, NULL);
 	} else {
@@ -507,7 +513,7 @@ int handle_command(enum command cmd, bool debug)
 						 NULL);
 	}
 
-	switch (cmd) {
+	switch (cmdline_opts->command) {
 	case CMD_POWER_ON:
 		rc = ipc_client_power_on(client_fmt);
 		if (rc < 0)
@@ -542,6 +548,9 @@ int handle_command(enum command cmd, bool debug)
 		break;
 	default:
 		/* We should handle all commands */
+		printf("[E] %s: Unknown command %d\n", __func__,
+		       cmdline_opts->command);
+
 		assert(false);
 	}
 
@@ -554,10 +563,9 @@ modem_quit:
 
 int main(int argc, char *argv[])
 {
-	enum command command = CMD_NONE;
+	struct cmdline_opts cmdline_opts;
 	int c = 0;
 	int opt_i = 0;
-	bool debug = false;
 
 	struct option opt_l[] = {
 		{"call",    required_argument,  0,  0 },
@@ -566,6 +574,8 @@ int main(int argc, char *argv[])
 		{"pin",     required_argument,  0,  0 },
 		{0,         0,                  0,  0 }
 	};
+
+	bzero((void *)&cmdline_opts, sizeof(cmdline_opts));
 
 	if (argc < 2) {
 		print_help();
@@ -595,7 +605,7 @@ int main(int argc, char *argv[])
 					}
 				}
 			} else if (strcmp(opt_l[opt_i].name, "debug") == 0) {
-				debug = true;
+				cmdline_opts.debug = true;
 				printf("[I] Debug enabled\n");
 			} else if (strncmp(opt_l[opt_i].name, "help", 4) == 0) {
 				print_help();
@@ -620,16 +630,16 @@ int main(int argc, char *argv[])
 
 	while (optind < argc) {
 		if (strncmp(argv[optind], "boot", 9) == 0) {
-			command = CMD_BOOT;
+			cmdline_opts.command = CMD_BOOT;
 			break;
 		} else if (strncmp(argv[optind], "power-on", 8) == 0) {
-			command = CMD_POWER_ON;
+			cmdline_opts.command = CMD_POWER_ON;
 			break;
 		} else if (strncmp(argv[optind], "power-off", 9) == 0) {
-			command = CMD_POWER_OFF;
+			cmdline_opts.command = CMD_POWER_OFF;
 			break;
 		} else if (strncmp(argv[optind], "start", 5) == 0) {
-			command = CMD_START;
+			cmdline_opts.command = CMD_START;
 			break;
 		} else {
 			printf("[E] Unknown argument: '%s'\n", argv[optind]);
@@ -640,7 +650,7 @@ int main(int argc, char *argv[])
 		optind++;
 	}
 
-	if (command == CMD_NONE) {
+	if (cmdline_opts.command == CMD_NONE) {
 		printf("\n");
 		printf("Error: No command given. You need to use a command.\n");
 		printf("       See the help below for more details.\n");
@@ -649,5 +659,5 @@ int main(int argc, char *argv[])
 		return 1;
 	}
 
-	return handle_command(command, debug);
+	return handle_command(&cmdline_opts);
 }
