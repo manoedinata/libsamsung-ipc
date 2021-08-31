@@ -50,6 +50,7 @@ char call_number[14];
 char sim_pin[8];
 
 enum command {
+	CMD_NONE,
 	CMD_START,
 	CMD_BOOT,
 	CMD_POWER_ON,
@@ -553,7 +554,7 @@ modem_quit:
 
 int main(int argc, char *argv[])
 {
-	enum command command;
+	enum command command = CMD_NONE;
 	int c = 0;
 	int opt_i = 0;
 	bool debug = false;
@@ -637,6 +638,15 @@ int main(int argc, char *argv[])
 		}
 
 		optind++;
+	}
+
+	if (command == CMD_NONE) {
+		printf("\n");
+		printf("Error: No command given. You need to use a command.\n");
+		printf("       See the help below for more details.\n");
+		printf("\n");
+		print_help();
+		return 1;
 	}
 
 	return handle_command(command, debug);
