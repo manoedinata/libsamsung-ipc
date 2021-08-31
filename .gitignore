@@ -35,4 +35,5 @@ build
 core
 ipc-modem
 ipc-test
+nv_data-imei
 nv_data-md5
