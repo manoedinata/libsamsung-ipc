@@ -4,6 +4,8 @@
 /samsung-ipc/tests/libsamsung-ipc-test.trs
 /samsung-ipc/tests/test-suite.log
 /test-driver
+/tools/ipc-modem.log
+/tools/ipc-modem.trs
 /tools/nv_data-imei.log
 /tools/nv_data-imei.trs
 /tools/nv_data-md5.log
