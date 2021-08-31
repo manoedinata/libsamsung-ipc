@@ -561,6 +561,13 @@ modem_quit:
 	return rc;
 }
 
+void print_cmdline_opts(struct cmdline_opts *cmdline_opts)
+
+{
+	if (cmdline_opts->debug)
+		printf("[I] Debug enabled\n");
+}
+
 int main(int argc, char *argv[])
 {
 	struct cmdline_opts cmdline_opts;
@@ -606,7 +613,6 @@ int main(int argc, char *argv[])
 				}
 			} else if (strcmp(opt_l[opt_i].name, "debug") == 0) {
 				cmdline_opts.debug = true;
-				printf("[I] Debug enabled\n");
 			} else if (strncmp(opt_l[opt_i].name, "help", 4) == 0) {
 				print_help();
 				exit(1);
@@ -658,6 +664,8 @@ int main(int argc, char *argv[])
 		print_help();
 		return 1;
 	}
+
+	print_cmdline_opts(&cmdline_opts);
 
 	return handle_command(&cmdline_opts);
 }
