@@ -23,11 +23,11 @@ import sys
 import sh
 
 def usage(progname):
-    print("{} [test]".format(progname))
+    print('{} [test]'.format(progname))
     sys.exit(1)
 
 def get_output(data):
-    return str(data).replace(os.linesep, "")
+    return str(data).replace(os.linesep, '')
 
 class IpcModem(object):
     def __init__(self):
@@ -36,7 +36,7 @@ class IpcModem(object):
         if not srcdir:
             srcdir = os.path.dirname(sys.argv[0])
 
-        ipc_modem = sh.Command(srcdir + os.sep + "ipc-modem")
+        ipc_modem = sh.Command(srcdir + os.sep + 'ipc-modem')
         self.ipc_modem = ipc_modem.bake('--dry-run')
 
     def test_help(self):
@@ -48,17 +48,17 @@ class IpcModem(object):
             raise Exception()
 
     def test_boot(self, timeout=2):
-        self.ipc_modem("boot",  _timeout=timeout)
+        self.ipc_modem('boot',  _timeout=timeout)
 
     def test_power_on(self, timeout=2):
-        self.ipc_modem("power-on",  _timeout=timeout)
+        self.ipc_modem('power-on',  _timeout=timeout)
 
     def test_power_off(self, timeout=2):
-        self.ipc_modem("power-off", _timeout=timeout)
+        self.ipc_modem('power-off', _timeout=timeout)
 
     def test_start(self, timeout=3):
         try:
-            self.ipc_modem("start",  _timeout=timeout)
+            self.ipc_modem('start',  _timeout=timeout)
         except sh.TimeoutException:
             pass
         else:

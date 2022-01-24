@@ -30,10 +30,10 @@ class libsamsung_ipc_test(object):
         if not srcdir:
             srcdir = os.path.dirname(sys.argv[0])
 
-        self.run = sh.Command(srcdir + os.sep + "libsamsung-ipc-test")
+        self.run = sh.Command(srcdir + os.sep + 'libsamsung-ipc-test')
 
     def run_all_tests(self):
-        output = str(self.run("list-tests")).split(os.linesep)
+        output = str(self.run('list-tests')).split(os.linesep)
         # Remove the last line break from the output
         output.remove('')
 
@@ -44,7 +44,7 @@ class libsamsung_ipc_test(object):
         output.pop(0)
 
         for test_name in output:
-            self.run("test", test_name.replace(' ', ''))
+            self.run('test', test_name.replace(' ', ''))
 
 def main():
     tests = libsamsung_ipc_test()

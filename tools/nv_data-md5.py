@@ -23,11 +23,11 @@ import sys
 import sh
 
 def usage(progname):
-    print("{} [test]".format(progname))
+    print('{} [test]'.format(progname))
     sys.exit(1)
 
 def get_output(data):
-    return str(data).replace(os.linesep, "")
+    return str(data).replace(os.linesep, '')
 
 class NvDataMD5(object):
     def __init__(self):
@@ -36,7 +36,7 @@ class NvDataMD5(object):
         if not srcdir:
             srcdir = os.path.dirname(sys.argv[0])
 
-        self.nv_data_md5 = sh.Command(srcdir + os.sep + "nv_data-md5")
+        self.nv_data_md5 = sh.Command(srcdir + os.sep + 'nv_data-md5')
     def test_help(self):
         try:
             self.nv_data_md5()
@@ -46,12 +46,12 @@ class NvDataMD5(object):
             raise Exception()
 
     def test_commands(self):
-        expected_md5 = "5293814414abb3831e3fc1a1b35e69bc"
+        expected_md5 = '5293814414abb3831e3fc1a1b35e69bc'
         NV_DATA_SIZE = 0x200000
         nv_data_bin = get_output(sh.mktemp())
 
         # Create nv_data.bin
-        sh.ddrescue("/dev/zero", nv_data_bin, "-s", str(NV_DATA_SIZE))
+        sh.ddrescue('/dev/zero', nv_data_bin, '-s', str(NV_DATA_SIZE))
 
         output = get_output(self.nv_data_md5(nv_data_bin))
 
