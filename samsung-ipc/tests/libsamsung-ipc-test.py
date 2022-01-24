@@ -26,11 +26,16 @@ class libsamsung_ipc_test(object):
     def __init__(self):
         srcdir = os.environ.get('srcdir', None)
 
-        # Enable also to test without automake
-        if not srcdir:
-            srcdir = os.path.dirname(sys.argv[0])
+        command_path = ''
+        if srcdir:
+            command_path = '.' + os.sep + 'libsamsung-ipc-test'
+        # Enable to run tests without automake
+        else:
+            command_path = os.path.dirname(sys.argv[0]) \
+                + os.sep \
+                + 'libsamsung-ipc-test'
 
-        self.run = sh.Command(srcdir + os.sep + 'libsamsung-ipc-test')
+        self.run = sh.Command(command_path)
 
     def run_all_tests(self):
         output = str(self.run('list-tests')).split(os.linesep)
