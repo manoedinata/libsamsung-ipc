@@ -32,11 +32,17 @@ def get_output(data):
 class NvDataMD5(object):
     def __init__(self):
         srcdir = os.environ.get('srcdir', None)
-        # Enable also to test without automake
-        if not srcdir:
-            srcdir = os.path.dirname(sys.argv[0])
 
-        self.nv_data_md5 = sh.Command(srcdir + os.sep + 'nv_data-md5')
+        command_path = ''
+        if srcdir:
+            command_path = '.' + os.sep + 'nv_data-md5'
+        # Enable to run tests without automake
+        else:
+            command_path = os.path.dirname(sys.argv[0]) \
+                + os.sep \
+                + 'nv_data-md5'
+
+        self.nv_data_md5 = sh.Command(command_path)
     def test_help(self):
         try:
             self.nv_data_md5()
