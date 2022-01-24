@@ -32,11 +32,17 @@ def get_output(data):
 class IpcModem(object):
     def __init__(self):
         srcdir = os.environ.get('srcdir', None)
-        # Enable also to test without automake
-        if not srcdir:
-            srcdir = os.path.dirname(sys.argv[0])
 
-        ipc_modem = sh.Command(srcdir + os.sep + 'ipc-modem')
+        command_path = ''
+        if srcdir:
+            command_path = '.' + os.sep + 'ipc-modem'
+        # Enable to run tests without automake
+        else:
+            command_path = os.path.dirname(sys.argv[0]) \
+                + os.sep \
+                + 'ipc-modem'
+
+        ipc_modem = sh.Command(command_path)
         self.ipc_modem = ipc_modem.bake('--dry-run')
 
     def test_help(self):
