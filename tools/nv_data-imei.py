@@ -46,11 +46,18 @@ def get_output(data):
 class NvDataImei(object):
     def __init__(self):
         srcdir = os.environ.get('srcdir', None)
-        # Enable also to test without automake
-        if not srcdir:
-            srcdir = os.path.dirname(sys.argv[0])
 
-        self.nv_data_imei = sh.Command(srcdir + os.sep + 'nv_data-imei')
+        command_path = ''
+        if srcdir:
+            command_path = '.' + os.sep + 'nv_data-imei'
+        # Enable to run tests without automake
+        else:
+            command_path = os.path.dirname(sys.argv[0]) \
+                + os.sep \
+                + 'nv_data-imei'
+
+        self.nv_data_imei = sh.Command(command_path)
+
     def test_help(self):
         try:
             self.nv_data_imei('')
