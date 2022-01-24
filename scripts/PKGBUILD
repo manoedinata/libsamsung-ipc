@@ -1,0 +1,52 @@
+# Copyright (C) 2022 Denis 'GNUtoo' Carikli <GNUtoo@cyberdimension.org>
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
+pkgname=libsamsung-ipc-git
+pkgver=0.3.1.r703.7c5e96a
+pkgrel=1
+pkgdesc="samsung-ipc modem protocol implementation."
+arch=('armv7h' 'i686' 'x86_64')
+license=('GPL2')
+makedepends=('autoconf'
+             'automake'
+             'coreutils'
+             'ddrescue'
+             'gawk'
+             'grep'
+             'libtool'
+             'pkg-config'
+             'python'
+             'python-sh'
+             'sed')
+depends=('openssl')
+
+pkgver() {
+  _base_version="0.3.1"
+  _base_revision="5cb3e7cb99701cae738693f2d6a6797a4d2df679"
+
+  if [ -d ../../.git ] ; then
+    printf "%s.r%s.%s" \
+      "${_base_version}" \
+      "$(git -C ../../ rev-list --count HEAD)" \
+      "$(git -C ../../ rev-parse --short HEAD)"
+  else
+    date "+%Y%m%d"
+  fi
+}
+
+build() {
+  ../../autogen.sh
+  ../../configure --prefix=/usr --enable-debug
+  make
+}
+
+check() {
+  make check
+}
+
+package(){
+  make DESTDIR="$pkgdir" install
+}
