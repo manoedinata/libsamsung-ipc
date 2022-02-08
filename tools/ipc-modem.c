@@ -28,6 +28,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <strings.h>
+#include <syslog.h>
 #include <termios.h>
 #include <unistd.h>
 #include <string.h>
@@ -39,6 +40,8 @@
 #include <samsung-ipc.h>
 
 #include "ipc-modem.h"
+
+enum log_target log_target;
 
 int state = MODEM_STATE_LPM;
 int seq;
@@ -478,10 +481,15 @@ void modem_log_handler(void *user_data, const char *msg)
 				break;
 		}
 
-		if (user_data)
+		if (log_target == LOG_TO_STDOUT && user_data)
 			printf("[%s] %s\n", (char *)user_data, message);
-		else
+		else if (log_target == LOG_TO_STDOUT)
 			printf("[%s] %s\n", MODEM_LOG_DEBUG, message);
+		else if (log_target == LOG_TO_SYSLOG && user_data)
+			syslog(LOG_INFO,
+			       "[%s] %s\n", (char *)user_data, message);
+		else if (log_target == LOG_TO_SYSLOG)
+			syslog(LOG_INFO, "[%s] %s\n", MODEM_LOG_DEBUG, message);
 	}
 
 	free(message);
@@ -539,17 +547,20 @@ void print_help(void)
 {
 	printf("usage: ipc-modem <command>\n"
 	       "commands:\n"
-	       "\tboot                  boot modem only\n"
-	       "\tpower-on              power on the modem only\n"
-	       "\tpower-off             power off the modem only\n"
-	       "\tstart                 boot modem and start read loop\n"
+	       "\tboot                          boot modem only\n"
+	       "\tpower-on                      power on the modem only\n"
+	       "\tpower-off                     power off the modem only\n"
+	       "\tstart                         "
+	       "boot modem and start read loop\n"
 	       "arguments:\n"
-	       "\t--call=[NUMBER]       call NUMBER\n"
-	       "\t--debug               enable debug messages\n"
-	       "\t--dry-run             "
+	       "\t--call=[NUMBER]               call NUMBER\n"
+	       "\t--debug                       enable debug messages\n"
+	       "\t--dry-run                     "
 	       "Test the ipc-modem program without talking to the modem.\n"
-	       "\t--help                print this help message\n"
-	       "\t--pin=[PIN]           provide SIM card PIN\n");
+	       "\t--help                        print this help message\n"
+	       "\t--log-target=[stdout|syslog]  "
+	       "direct logs to stdout or syslog\n"
+	       "\t--pin=[PIN]                   provide SIM card PIN\n");
 }
 
 int handle_command(struct ipc_client *client,
@@ -654,12 +665,13 @@ int main(int argc, char *argv[])
 	int opt_i = 0;
 
 	struct option opt_l[] = {
-		{"call",    required_argument,  0,  0 },
-		{"debug",   no_argument,        0,  0 },
-		{"dry-run", no_argument,        0,  0 },
-		{"help",    no_argument,        0,  0 },
-		{"pin",     required_argument,  0,  0 },
-		{0,         0,                  0,  0 }
+		{"call",       required_argument,  0,  0 },
+		{"debug",      no_argument,        0,  0 },
+		{"dry-run",    no_argument,        0,  0 },
+		{"help",       no_argument,        0,  0 },
+		{"log-target", required_argument,  0,  0 },
+		{"pin",        required_argument,  0,  0 },
+		{0,            0,                  0,  0 }
 	};
 
 	bzero((void *)&cmdline_opts, sizeof(cmdline_opts));
@@ -686,6 +698,13 @@ int main(int argc, char *argv[])
 					       "Call number is too long!\n");
 					return 1;
 				}
+			}
+		} else if ((strcmp(opt_l[opt_i].name, "log-target") == 0)) {
+			if (optarg && !strcmp(optarg, "syslog")) {
+				log_target = LOG_TO_SYSLOG;
+			} else if (optarg && strcmp(optarg, "stdout")) {
+				printf("[E] Invalid log target '%s'\n", optarg);
+				return 1;
 			}
 		} else if (strcmp(opt_l[opt_i].name, "debug") == 0) {
 			cmdline_opts.debug = true;
@@ -721,9 +740,11 @@ int main(int argc, char *argv[])
 
 	if (cmdline_opts.debug == 0)
 		ipc_client_log_callback_register(client,
-						 modem_log_handler_quiet, NULL);
+						 modem_log_handler_quiet,
+						 NULL);
 	else
-		ipc_client_log_callback_register(client, modem_log_handler,
+		ipc_client_log_callback_register(client,
+						 modem_log_handler,
 						 NULL);
 
 	while (optind < argc) {

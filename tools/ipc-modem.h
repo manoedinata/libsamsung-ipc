@@ -37,12 +37,16 @@ enum command {
 	CMD_POWER_OFF,
 };
 
+enum log_target {
+	LOG_TO_STDOUT,
+	LOG_TO_SYSLOG,
+};
+
 struct cmdline_opts {
 	enum command command;
 	bool debug;
 	bool dry_run;
 };
-
 
 void ipc_modem_log(struct ipc_client *client,
 		   char *prefix, const char *message, ...);
