@@ -626,50 +626,43 @@ int main(int argc, char *argv[])
 		exit(1);
 	}
 
-	while (c >= 0) {
+	while (true) {
 		c = getopt_long(argc, argv, "", opt_l, &opt_i);
-		if (c < 0)
+		if (c != 0)
 			break;
 
-		switch (c) {
-		case 0:
-			if (strcmp(opt_l[opt_i].name, "call") == 0) {
-				if (optarg) {
-					if (strlen(optarg) < 14) {
-						assert(strlen(optarg) <
-						       sizeof(call_number));
-						printf("[I] "
-						       "Got call number!\n");
-						strcpy(call_number, optarg);
-					} else {
-						printf("[E] "
-						       "Call number is too long!"
-						       "\n");
-						return 1;
-					}
-				}
-			} else if (strcmp(opt_l[opt_i].name, "debug") == 0) {
-				cmdline_opts.debug = true;
-			} else if (strcmp(opt_l[opt_i].name, "dry-run") == 0) {
-				cmdline_opts.dry_run = true;
-			} else if (strncmp(opt_l[opt_i].name, "help", 4) == 0) {
-				print_help();
-				exit(1);
-			} else if ((strcmp(opt_l[opt_i].name, "pin") == 0) &&
-				   (optarg)) {
-				if (strlen(optarg) < 8) {
+		if (strcmp(opt_l[opt_i].name, "call") == 0) {
+			if (optarg) {
+				if (strlen(optarg) < 14) {
 					assert(strlen(optarg) <
-					       sizeof(sim_pin));
-
-					printf("[I] Got SIM PIN!\n");
-					strcpy(sim_pin, optarg);
+					       sizeof(call_number));
+					printf("[I] Got call number!\n");
+					strcpy(call_number, optarg);
 				} else {
-					printf("[E] SIM PIN is too long!\n");
+					printf("[E] "
+					       "Call number is too long!\n");
 					return 1;
 				}
 			}
+		} else if (strcmp(opt_l[opt_i].name, "debug") == 0) {
+			cmdline_opts.debug = true;
+		} else if (strcmp(opt_l[opt_i].name, "dry-run") == 0) {
+			cmdline_opts.dry_run = true;
+		} else if (strncmp(opt_l[opt_i].name, "help", 4) == 0) {
+			print_help();
+			exit(1);
+		} else if ((strcmp(opt_l[opt_i].name, "pin") == 0) &&
+			   (optarg)) {
+			if (strlen(optarg) < 8) {
+				assert(strlen(optarg) <
+				       sizeof(sim_pin));
 
-			break;
+				printf("[I] Got SIM PIN!\n");
+				strcpy(sim_pin, optarg);
+			} else {
+				printf("[E] SIM PIN is too long!\n");
+				return 1;
+			}
 		}
 	}
 
