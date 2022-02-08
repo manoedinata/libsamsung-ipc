@@ -37,9 +37,7 @@
 
 #include <samsung-ipc.h>
 
-#define MODEM_STATE_LPM     0
-#define MODEM_STATE_NORMAL  2
-#define MODEM_STATE_SIM_OK  4
+#include "ipc-modem.h"
 
 int state = MODEM_STATE_LPM;
 int seq;
@@ -49,20 +47,6 @@ int call_done;
 
 char call_number[14];
 char sim_pin[8];
-
-enum command {
-	CMD_NONE,
-	CMD_START,
-	CMD_BOOT,
-	CMD_POWER_ON,
-	CMD_POWER_OFF,
-};
-
-struct cmdline_opts {
-	enum command command;
-	bool debug;
-	bool dry_run;
-};
 
 int seq_get(void)
 {
