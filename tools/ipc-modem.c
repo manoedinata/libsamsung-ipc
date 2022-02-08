@@ -22,6 +22,7 @@
 #include <fcntl.h>
 #include <getopt.h>
 #include <pthread.h>
+#include <stdarg.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -155,7 +156,7 @@ void modem_set_sec_pin_status(struct ipc_client *client, char *pin1, char *pin2)
 {
 	struct ipc_sec_pin_status_request_data pin_status;
 
-	printf("[I] Sending PIN1 unlock request\n");
+	ipc_modem_log(client, MODEM_LOG_INFO, "Sending PIN1 unlock request\n");
 
 	ipc_sec_pin_status_setup(&pin_status, IPC_SEC_PIN_TYPE_PIN1, pin1,
 				 pin2);
@@ -176,37 +177,51 @@ void modem_response_sec(struct ipc_client *client, struct ipc_message *resp)
 
 		switch (sim_status->status) {
 		case IPC_SEC_PIN_STATUS_CARD_NOT_PRESENT:
-			printf("[I] SIM card is definitely absent\n");
+			ipc_modem_log(client, MODEM_LOG_INFO,
+				      "SIM card is definitely absent\n");
 			break;
 		case IPC_SEC_PIN_STATUS_LOCK_SC:
 			switch (sim_status->facility_lock) {
 			case IPC_SEC_FACILITY_LOCK_TYPE_SC_PIN1_REQ:
-				printf("[I] "
-				       "We need the PIN1 to unlock the card!"
-				       "\n");
+				ipc_modem_log(
+					client,
+					MODEM_LOG_INFO,
+					"We need the PIN1 to unlock the card!"
+					"\n");
 				if (strlen(sim_pin) > 0) {
 					modem_set_sec_pin_status(client,
 								 sim_pin, NULL);
 				} else {
-					printf("[E] No SIM Pin, use --pin\n");
+					ipc_modem_log(
+						client,
+						MODEM_LOG_ERROR,
+						"No SIM Pin, use --pin\n");
 				}
 				break;
 			case IPC_SEC_FACILITY_LOCK_TYPE_SC_PUK_REQ:
-				printf("[I] Please provide the SIM card PUK!"
-				       "\n");
+				ipc_modem_log(
+					client,
+					MODEM_LOG_INFO,
+					"Please provide the SIM card PUK!"
+					"\n");
 				break;
 			case IPC_SEC_FACILITY_LOCK_TYPE_SC_CARD_BLOCKED:
-				printf("[I] Ouch, the SIM Card is blocked.\n");
+				ipc_modem_log(
+					client,
+					MODEM_LOG_INFO,
+					"Ouch, the SIM Card is blocked.\n");
 				break;
 			}
 			break;
 		case IPC_SEC_PIN_STATUS_INIT_COMPLETE:
-			printf("[3] SIM init complete\n");
+			ipc_modem_log(client, "3", "SIM init complete\n");
 			if (state == MODEM_STATE_NORMAL)
 				state = MODEM_STATE_SIM_OK;
 			break;
 		case IPC_SEC_PIN_STATUS_PB_INIT_COMPLETE:
-			printf("[I] SIM Phone Book init complete\n");
+			ipc_modem_log(client,
+				      MODEM_LOG_INFO,
+				      "SIM Phone Book init complete\n");
 			break;
 		}
 		break;
@@ -214,11 +229,15 @@ void modem_response_sec(struct ipc_client *client, struct ipc_message *resp)
 		type = *((char *) resp->data);
 		switch (type) {
 		case IPC_SEC_SIM_CARD_TYPE_UNKNOWN:
-			printf("[I] No SIM card type: unknown (absent?)\n");
+			ipc_modem_log(
+				client,
+				MODEM_LOG_INFO,
+				"No SIM card type: unknown (absent?)\n");
 			break;
 		case IPC_SEC_SIM_CARD_TYPE_SIM:
 		case IPC_SEC_SIM_CARD_TYPE_USIM:
-			printf("[I] SIM card found\n");
+			ipc_modem_log(client,
+				      MODEM_LOG_INFO, "SIM card found\n");
 			break;
 		}
 		break;
@@ -230,12 +249,14 @@ void modem_response_sms(struct ipc_client *client, struct ipc_message *resp)
 	switch (resp->command) {
 	case IPC_SMS_DEVICE_READY:
 		if (state ==  MODEM_STATE_LPM) {
-			printf("[4] "
-			       "Modem is ready, requesting normal power mode"
-			       "\n");
+			ipc_modem_log(
+				client,
+				"4",
+				"Modem is ready, requesting normal power mode"
+				"\n");
 			modem_exec_power_normal(client);
 		} else if (state == MODEM_STATE_SIM_OK) {
-			printf("[5] Modem is fully ready\n");
+			ipc_modem_log(client, "5", "Modem is fully ready\n");
 			modem_set_sms_device_ready(client);
 		}
 		break;
@@ -256,7 +277,8 @@ void modem_response_call(struct ipc_client *client, struct ipc_message *resp)
 		 */
 		break;
 	case IPC_CALL_INCOMING:
-		printf("[I] Got an incoming call!\n");
+		ipc_modem_log(client,
+			      MODEM_LOG_INFO, "Got an incoming call!\n");
 		in_call = 1;
 		modem_get_call_list(client);
 		break;
@@ -264,13 +286,18 @@ void modem_response_call(struct ipc_client *client, struct ipc_message *resp)
 		stat = (struct ipc_call_status_data *)resp->data;
 
 		if (stat->status == IPC_CALL_STATUS_DIALING) {
-			printf("[I] Sending clock ctrl and restore alsa\n");
+			ipc_modem_log(
+				client,
+				MODEM_LOG_INFO,
+				"Sending clock ctrl and restore alsa\n");
 			modem_snd_clock_ctrl(client);
 			/*
 			 * system("alsa_ctl -f /data/alsa_state_modem restore");
 			 */
 
-			printf("[I] CALL STATUS DIALING!!!\n");
+			ipc_modem_log(client,
+				      MODEM_LOG_INFO,
+				      "CALL STATUS DIALING!!!\n");
 
 			modem_snd_spkr_volume_ctrl(client);
 			modem_snd_audio_path_ctrl(client);
@@ -279,12 +306,16 @@ void modem_response_call(struct ipc_client *client, struct ipc_message *resp)
 		}
 
 		if (stat->status == IPC_CALL_STATUS_CONNECTED) {
-			printf("[I] CALL STATUS CONNECTED!!!\n");
+			ipc_modem_log(client,
+				      MODEM_LOG_INFO,
+				      "CALL STATUS CONNECTED!!!\n");
 			modem_snd_no_mic_mute(client);
 		}
 
 		if (stat->status == IPC_CALL_STATUS_RELEASED) {
-			printf("[I] CALL STATUS RELEASED!!!\n");
+			ipc_modem_log(client,
+				      MODEM_LOG_INFO,
+				      "CALL STATUS RELEASED!!!\n");
 			modem_snd_no_mic_mute(client);
 		}
 		break;
@@ -298,7 +329,7 @@ void modem_response_pwr(__attribute__((unused)) struct ipc_client *client,
 
 	switch (resp->command) {
 	case IPC_PWR_PHONE_PWR_UP:
-		printf("[2] Phone is powered up (LPM)!\n");
+		ipc_modem_log(client, "2", "Phone is powered up (LPM)!\n");
 		state = MODEM_STATE_LPM;
 		break;
 
@@ -308,10 +339,15 @@ void modem_response_pwr(__attribute__((unused)) struct ipc_client *client,
 		switch (state_n) {
 			/* FIXME: Broken */
 		case IPC_PWR_PHONE_STATE_NORMAL:
-			printf("Power state is now: NORMAL\n");
+			ipc_modem_log(client,
+				      MODEM_LOG_INFO,
+				      "Power state is now: NORMAL\n");
 			break;
 		case IPC_PWR_PHONE_STATE_LPM:
-			printf("Power state is now: LPM (Low Power Mode)?\n");
+			ipc_modem_log(
+				client,
+				MODEM_LOG_INFO,
+				"Power state is now: LPM (Low Power Mode)?\n");
 			break;
 		}
 #endif
@@ -331,17 +367,24 @@ void modem_response_net(__attribute__((unused)) struct ipc_client *client,
 	case IPC_NET_REGIST:
 		regi = (struct ipc_net_regist_response_data *) resp->data;
 		if (regi->status == IPC_NET_REGISTRATION_STATUS_HOME)
-			printf("[I] Registered with network successfully!\n");
+			ipc_modem_log(
+				client,
+				MODEM_LOG_INFO,
+				"Registered with network successfully!\n");
 		break;
 	case IPC_NET_SERVING_NETWORK:
 		memcpy(mnc, (char *)((char *) resp->data + 3), 5);
 		mnc[5] = 0;
-		printf("[6] Registered with network! "
-		       "Got PLMN (Mobile Network Code): '%s'\n",
-		       mnc);
+		ipc_modem_log(client,
+			      "6",
+			      "Registered with network! "
+			      "Got PLMN (Mobile Network Code): '%s'\n",
+			      mnc);
 		if (call_done == 0) {
-			printf("Requesting outgoing call to %s!\n",
-			       call_number);
+			ipc_modem_log(client,
+				      MODEM_LOG_INFO,
+				      "Requesting outgoing call to %s!\n",
+				      call_number);
 			modem_exec_call_out(client, call_number);
 		}
 		call_done = 1;
@@ -391,8 +434,10 @@ int modem_read_loop(struct ipc_client *client)
 
 		rc = ipc_client_recv(client, &resp);
 		if (rc < 0) {
-			printf("[E] "
-			       "Can't RECV from modem: please run this again"
+			ipc_modem_log(
+				client,
+				MODEM_LOG_ERROR,
+				"Can't RECV from modem: please run this again"
 			       "\n");
 			break;
 		}
@@ -409,15 +454,15 @@ int modem_read_loop(struct ipc_client *client)
 int modem_dummy_read_loop(__attribute__((unused)) struct ipc_client *client)
 {
 	while (true) {
-		printf("[I] %s: looping\n", __func__);
+		ipc_modem_log(client,
+			      MODEM_LOG_INFO, "%s: looping\n", __func__);
 		sleep(1);
 	}
 
 	return 0;
 }
 
-void modem_log_handler(__attribute__((unused)) void *user_data,
-		       const char *msg)
+void modem_log_handler(void *user_data, const char *msg)
 {
 	int i, l;
 	char *message;
@@ -433,7 +478,10 @@ void modem_log_handler(__attribute__((unused)) void *user_data,
 				break;
 		}
 
-		printf("[D] %s\n", message);
+		if (user_data)
+			printf("[%s] %s\n", (char *)user_data, message);
+		else
+			printf("[%s] %s\n", MODEM_LOG_DEBUG, message);
 	}
 
 	free(message);
@@ -442,6 +490,19 @@ void modem_log_handler(__attribute__((unused)) void *user_data,
 void modem_log_handler_quiet(__attribute__((unused)) void *user_data,
 			     __attribute__((unused)) const char *msg)
 {
+}
+
+void ipc_modem_log(__attribute__((unused)) struct ipc_client *client,
+		   char *prefix, const char *message, ...)
+{
+	va_list args;
+	char buffer[4096];
+
+	va_start(args, message);
+	vsnprintf((char *) &buffer, sizeof(buffer), message, args);
+	va_end(args);
+
+	modem_log_handler(prefix, buffer);
 }
 
 int modem_start(struct ipc_client *client)
@@ -491,106 +552,104 @@ void print_help(void)
 	       "\t--pin=[PIN]           provide SIM card PIN\n");
 }
 
-int handle_command(struct cmdline_opts *cmdline_opts)
+int handle_command(struct ipc_client *client,
+		   struct cmdline_opts *cmdline_opts)
 {
-	struct ipc_client *client_fmt;
 	int rc = 0;
-
-	if (cmdline_opts->dry_run)
-		client_fmt = ipc_client_create(IPC_CLIENT_TYPE_DUMMY);
-	else
-		client_fmt = ipc_client_create(IPC_CLIENT_TYPE_FMT);
-
-	if (client_fmt == 0) {
-		printf("[E] Could not create IPC client; aborting ...\n");
-		goto modem_quit;
-	}
-
-	if (cmdline_opts->debug == 0) {
-		ipc_client_log_callback_register(client_fmt,
-						 modem_log_handler_quiet, NULL);
-	} else {
-		ipc_client_log_callback_register(client_fmt, modem_log_handler,
-						 NULL);
-	}
 
 	switch (cmdline_opts->command) {
 	case CMD_POWER_ON:
 		if (cmdline_opts->dry_run)
 			break;
 
-		rc = ipc_client_power_on(client_fmt);
+		rc = ipc_client_power_on(client);
 		if (rc < 0)
-			printf("[E] Something went wrong "
-			       "while powering modem on\n");
+			ipc_modem_log(client, "[E]",
+				       "[E] Something went wrong "
+				       "while powering modem on\n");
 		goto modem_quit;
 	case CMD_POWER_OFF:
 		if (cmdline_opts->dry_run)
 			break;
 
-		rc = ipc_client_power_off(client_fmt);
+		rc = ipc_client_power_off(client);
 		if (rc < 0)
-			printf("[E] Something went wrong "
-			       "while powering modem off\n");
+			ipc_modem_log(client,
+				      MODEM_LOG_ERROR,
+				      "Something went wrong "
+				      "while powering modem off\n");
 		goto modem_quit;
 	case CMD_BOOT:
 		if (cmdline_opts->dry_run)
 			break;
 
-		rc = ipc_client_boot(client_fmt);
+		rc = ipc_client_boot(client);
 		if (rc < 0)
-			printf("[E] Something went wrong "
-			       "while bootstrapping modem\n");
+			ipc_modem_log(client,
+				      MODEM_LOG_ERROR,
+				      "Something went wrong "
+				      "while bootstrapping modem\n");
 		break;
 	case CMD_START:
 		if (cmdline_opts->dry_run) {
-			printf("[1] "
-			       "Starting dummy modem_read_loop on %s client\n",
+			ipc_modem_log(
+				client,
+				"1",
+				"Starting dummy modem_read_loop on %s client\n",
 				"FMT");
-			modem_dummy_read_loop(client_fmt);
+			modem_dummy_read_loop(client);
 			break;
 		}
 
-		printf("[0] Starting modem on FMT client\n");
+		ipc_modem_log(client,
+			      "0", "Starting modem on FMT client\n");
 
-		rc = modem_start(client_fmt);
+		rc = modem_start(client);
 		if (rc < 0) {
-			printf("[E] Something went wrong\n");
-			modem_stop(client_fmt);
+			ipc_modem_log(client,
+				      MODEM_LOG_ERROR,
+				      "Something went wrong\n");
+			modem_stop(client);
 			return 1;
 		}
-		printf("[1] Starting modem_read_loop on FMT client\n");
-		modem_read_loop(client_fmt);
+		ipc_modem_log(client,
+			      "1",
+			      "Starting modem_read_loop on FMT client\n");
+		modem_read_loop(client);
 
-		modem_stop(client_fmt);
+		modem_stop(client);
 		break;
 	default:
 		/* We should handle all commands */
-		printf("[E] %s: Unknown command %d\n", __func__,
-		       cmdline_opts->command);
+		ipc_modem_log(client,
+			      MODEM_LOG_ERROR,
+			      "%s: Unknown command %d\n", __func__,
+			      cmdline_opts->command);
 
 		assert(false);
 	}
 
 modem_quit:
-	if (client_fmt != 0)
-		ipc_client_destroy(client_fmt);
+	if (client != 0)
+		ipc_client_destroy(client);
 
 	return rc;
 }
 
-void print_cmdline_opts(struct cmdline_opts *cmdline_opts)
+void print_cmdline_opts(struct ipc_client *client,
+			struct cmdline_opts *cmdline_opts)
 
 {
 	if (cmdline_opts->debug)
-		printf("[I] Debug enabled\n");
+		ipc_modem_log(client, MODEM_LOG_INFO, "Debug enabled\n");
 	if (cmdline_opts->debug && cmdline_opts->dry_run)
-		printf("[I] dry-run mode\n");
+		ipc_modem_log(client, MODEM_LOG_INFO, "dry-run mode\n");
 }
 
 int main(int argc, char *argv[])
 {
 	struct cmdline_opts cmdline_opts;
+	struct ipc_client *client;
 	int c = 0;
 	int opt_i = 0;
 
@@ -650,6 +709,23 @@ int main(int argc, char *argv[])
 		}
 	}
 
+	if (cmdline_opts.dry_run)
+		client = ipc_client_create(IPC_CLIENT_TYPE_DUMMY);
+	else
+		client = ipc_client_create(IPC_CLIENT_TYPE_FMT);
+
+	if (client == 0) {
+		printf("[E] Could not create IPC client; aborting ...\n");
+		return 1;
+	}
+
+	if (cmdline_opts.debug == 0)
+		ipc_client_log_callback_register(client,
+						 modem_log_handler_quiet, NULL);
+	else
+		ipc_client_log_callback_register(client, modem_log_handler,
+						 NULL);
+
 	while (optind < argc) {
 		if (strncmp(argv[optind], "boot", 9) == 0) {
 			cmdline_opts.command = CMD_BOOT;
@@ -664,7 +740,10 @@ int main(int argc, char *argv[])
 			cmdline_opts.command = CMD_START;
 			break;
 		} else {
-			printf("[E] Unknown argument: '%s'\n", argv[optind]);
+			ipc_modem_log(client,
+				      MODEM_LOG_ERROR,
+				      "Unknown argument: '%s'\n",
+				      argv[optind]);
 			print_help();
 			return 1;
 		}
@@ -681,7 +760,7 @@ int main(int argc, char *argv[])
 		return 1;
 	}
 
-	print_cmdline_opts(&cmdline_opts);
+	print_cmdline_opts(client, &cmdline_opts);
 
-	return handle_command(&cmdline_opts);
+	return handle_command(client, &cmdline_opts);
 }
