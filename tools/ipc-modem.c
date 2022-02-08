@@ -476,19 +476,19 @@ int modem_stop(struct ipc_client *client)
 
 void print_help(void)
 {
-	printf("usage: ipc-modem <command>\n");
-	printf("commands:\n");
-	printf("\tboot                  boot modem only\n");
-	printf("\tpower-on              power on the modem only\n");
-	printf("\tpower-off             power off the modem only\n");
-	printf("\tstart                 boot modem and start read loop\n");
-	printf("arguments:\n");
-	printf("\t--call=[NUMBER]       call NUMBER\n");
-	printf("\t--debug               enable debug messages\n");
-	printf("\t--dry-run             "
-	       "Test the ipc-modem program without talking to the modem.\n");
-	printf("\t--help                print this help message\n");
-	printf("\t--pin=[PIN]           provide SIM card PIN\n");
+	printf("usage: ipc-modem <command>\n"
+	       "commands:\n"
+	       "\tboot                  boot modem only\n"
+	       "\tpower-on              power on the modem only\n"
+	       "\tpower-off             power off the modem only\n"
+	       "\tstart                 boot modem and start read loop\n"
+	       "arguments:\n"
+	       "\t--call=[NUMBER]       call NUMBER\n"
+	       "\t--debug               enable debug messages\n"
+	       "\t--dry-run             "
+	       "Test the ipc-modem program without talking to the modem.\n"
+	       "\t--help                print this help message\n"
+	       "\t--pin=[PIN]           provide SIM card PIN\n");
 }
 
 int handle_command(struct cmdline_opts *cmdline_opts)
@@ -673,10 +673,10 @@ int main(int argc, char *argv[])
 	}
 
 	if (cmdline_opts.command == CMD_NONE) {
-		printf("\n");
-		printf("Error: No command given. You need to use a command.\n");
-		printf("       See the help below for more details.\n");
-		printf("\n");
+		printf("\n"
+		       "Error: No command given. You need to use a command.\n"
+		       "       See the help below for more details.\n"
+		       "\n");
 		print_help();
 		return 1;
 	}
