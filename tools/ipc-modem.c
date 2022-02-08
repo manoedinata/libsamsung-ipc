@@ -686,7 +686,12 @@ int parse_cmdline_opts(struct ipc_modem_data *data, int argc, char *argv[])
 
 		if (strcmp(opt_l[opt_i].name, "call") == 0) {
 			if (optarg) {
-				if (strlen(optarg) < 14) {
+				if (strlen(optarg) == 0) {
+					ipc_modem_log(data->client,
+						      MODEM_LOG_ERROR,
+						      "Missing call number\n");
+					return EX_USAGE;
+				} else if (strlen(optarg) < 14) {
 					assert(strlen(optarg) <
 					       sizeof(data->call_number));
 					ipc_modem_log(data->client,

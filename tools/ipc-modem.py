@@ -75,7 +75,7 @@ class IpcModem(object):
         else:
             raise Exception()
 
-    def test_call(self, timeout=3):
+    def test_call_with_number(self, timeout=3):
         expected_output = "[I] Got call number!"
         output = ""
         try:
@@ -88,12 +88,22 @@ class IpcModem(object):
         if output != expected_output:
             raise Exception()
 
+    def test_call_without_number(self, timeout=3):
+        expected_output = "[E] Missing call number"
+        output = get_output(self.ipc_modem('power-on',
+                                           '--call=',
+                                           _timeout=timeout,
+                                           _ok_code=SysExit.EX_USAGE.exit_code))
+        if output != expected_output:
+            raise Exception()
+
     def test_commands(self):
         self.test_boot()
         self.test_power_on()
         self.test_power_off()
         self.test_start()
-        self.test_call()
+        self.test_call_with_number()
+        self.test_call_without_number()
 
 def main():
     ipc_modem = IpcModem()
