@@ -49,6 +49,8 @@ struct ipc_modem_data {
 	enum command command;
 	bool debug;
 	bool dry_run;
+	/* State */
+	bool in_call;
 };
 
 void ipc_modem_log(struct ipc_client *client,

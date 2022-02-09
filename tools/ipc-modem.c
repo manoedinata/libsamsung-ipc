@@ -45,7 +45,6 @@ enum log_target log_target;
 
 int state = MODEM_STATE_LPM;
 int seq;
-int in_call;
 int out_call;
 int call_done;
 
@@ -265,60 +264,60 @@ void modem_response_sms(struct ipc_client *client, struct ipc_message *resp)
 	}
 }
 
-void modem_response_call(struct ipc_client *client, struct ipc_message *resp)
+void modem_response_call(struct ipc_modem_data *data, struct ipc_message *resp)
 {
 	struct ipc_call_status_data *stat;
 
 	switch (resp->command) {
 	case IPC_CALL_LIST:
 		/*
-		 * if (in_call)
-		 * modem_exec_call_answer(client);
+		 * if (data->in_call)
+		 * modem_exec_call_answer(data->client);
 		 * if (out_call)
-		 * modem_snd_no_mic_mute(client);
+		 * modem_snd_no_mic_mute(data->client);
 		 */
 		break;
 	case IPC_CALL_INCOMING:
-		ipc_modem_log(client,
+		ipc_modem_log(data->client,
 			      MODEM_LOG_INFO, "Got an incoming call!\n");
-		in_call = 1;
-		modem_get_call_list(client);
+		data->in_call = 1;
+		modem_get_call_list(data->client);
 		break;
 	case IPC_CALL_STATUS:
 		stat = (struct ipc_call_status_data *)resp->data;
 
 		if (stat->status == IPC_CALL_STATUS_DIALING) {
 			ipc_modem_log(
-				client,
+				data->client,
 				MODEM_LOG_INFO,
 				"Sending clock ctrl and restore alsa\n");
-			modem_snd_clock_ctrl(client);
+			modem_snd_clock_ctrl(data->client);
 			/*
 			 * system("alsa_ctl -f /data/alsa_state_modem restore");
 			 */
 
-			ipc_modem_log(client,
+			ipc_modem_log(data->client,
 				      MODEM_LOG_INFO,
 				      "CALL STATUS DIALING!!!\n");
 
-			modem_snd_spkr_volume_ctrl(client);
-			modem_snd_audio_path_ctrl(client);
+			modem_snd_spkr_volume_ctrl(data->client);
+			modem_snd_audio_path_ctrl(data->client);
 
-			modem_get_call_list(client);
+			modem_get_call_list(data->client);
 		}
 
 		if (stat->status == IPC_CALL_STATUS_CONNECTED) {
-			ipc_modem_log(client,
+			ipc_modem_log(data->client,
 				      MODEM_LOG_INFO,
 				      "CALL STATUS CONNECTED!!!\n");
-			modem_snd_no_mic_mute(client);
+			modem_snd_no_mic_mute(data->client);
 		}
 
 		if (stat->status == IPC_CALL_STATUS_RELEASED) {
-			ipc_modem_log(client,
+			ipc_modem_log(data->client,
 				      MODEM_LOG_INFO,
 				      "CALL STATUS RELEASED!!!\n");
-			modem_snd_no_mic_mute(client);
+			modem_snd_no_mic_mute(data->client);
 		}
 		break;
 	}
@@ -411,10 +410,10 @@ void modem_response_handle(struct ipc_modem_data *data,
 		modem_response_sms(data->client, resp);
 		break;
 	case IPC_GROUP_CALL:
-		modem_response_call(data->client, resp);
+		modem_response_call(data, resp);
 		break;
 	case IPC_GROUP_DISP:
-		if (in_call)
+		if (data->in_call)
 			modem_snd_no_mic_mute(data->client);
 		break;
 	}
