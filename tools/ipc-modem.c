@@ -43,7 +43,6 @@
 
 enum log_target log_target;
 
-int state = MODEM_STATE_LPM;
 int seq;
 
 int seq_get(void)
@@ -214,8 +213,8 @@ void modem_response_sec(struct ipc_modem_data *data, struct ipc_message *resp)
 			break;
 		case IPC_SEC_PIN_STATUS_INIT_COMPLETE:
 			ipc_modem_log(data->client, "3", "SIM init complete\n");
-			if (state == MODEM_STATE_NORMAL)
-				state = MODEM_STATE_SIM_OK;
+			if (data->state == MODEM_STATE_NORMAL)
+				data->state = MODEM_STATE_SIM_OK;
 			break;
 		case IPC_SEC_PIN_STATUS_PB_INIT_COMPLETE:
 			ipc_modem_log(data->client,
@@ -243,20 +242,21 @@ void modem_response_sec(struct ipc_modem_data *data, struct ipc_message *resp)
 	}
 }
 
-void modem_response_sms(struct ipc_client *client, struct ipc_message *resp)
+void modem_response_sms(struct ipc_modem_data *data, struct ipc_message *resp)
 {
 	switch (resp->command) {
 	case IPC_SMS_DEVICE_READY:
-		if (state ==  MODEM_STATE_LPM) {
+		if (data->state ==  MODEM_STATE_LPM) {
 			ipc_modem_log(
-				client,
+				data->client,
 				"4",
 				"Modem is ready, requesting normal power mode"
 				"\n");
-			modem_exec_power_normal(client);
-		} else if (state == MODEM_STATE_SIM_OK) {
-			ipc_modem_log(client, "5", "Modem is fully ready\n");
-			modem_set_sms_device_ready(client);
+			modem_exec_power_normal(data->client);
+		} else if (data->state == MODEM_STATE_SIM_OK) {
+			ipc_modem_log(data->client,
+				      "5", "Modem is fully ready\n");
+			modem_set_sms_device_ready(data->client);
 		}
 		break;
 	}
@@ -321,15 +321,15 @@ void modem_response_call(struct ipc_modem_data *data, struct ipc_message *resp)
 	}
 }
 
-void modem_response_pwr(__attribute__((unused)) struct ipc_client *client,
-			struct ipc_message *resp)
+void modem_response_pwr(struct ipc_modem_data *data, struct ipc_message *resp)
 {
 	int state_n;
 
 	switch (resp->command) {
 	case IPC_PWR_PHONE_PWR_UP:
-		ipc_modem_log(client, "2", "Phone is powered up (LPM)!\n");
-		state = MODEM_STATE_LPM;
+		ipc_modem_log(data->client,
+			      "2", "Phone is powered up (LPM)!\n");
+		data->state = MODEM_STATE_LPM;
 		break;
 
 	case IPC_PWR_PHONE_STATE:
@@ -338,19 +338,19 @@ void modem_response_pwr(__attribute__((unused)) struct ipc_client *client,
 		switch (state_n) {
 			/* FIXME: Broken */
 		case IPC_PWR_PHONE_STATE_NORMAL:
-			ipc_modem_log(client,
+			ipc_modem_log(data->client,
 				      MODEM_LOG_INFO,
 				      "Power state is now: NORMAL\n");
 			break;
 		case IPC_PWR_PHONE_STATE_LPM:
 			ipc_modem_log(
-				client,
+				data->client,
 				MODEM_LOG_INFO,
 				"Power state is now: LPM (Low Power Mode)?\n");
 			break;
 		}
 #endif
-		state = state_n;
+		data->state = state_n;
 		break;
 
 	}
@@ -399,13 +399,13 @@ void modem_response_handle(struct ipc_modem_data *data,
 		modem_response_net(data, resp);
 		break;
 	case IPC_GROUP_PWR:
-		modem_response_pwr(data->client, resp);
+		modem_response_pwr(data, resp);
 		break;
 	case IPC_GROUP_SEC:
 		modem_response_sec(data, resp);
 		break;
 	case IPC_GROUP_SMS:
-		modem_response_sms(data->client, resp);
+		modem_response_sms(data, resp);
 		break;
 	case IPC_GROUP_CALL:
 		modem_response_call(data, resp);

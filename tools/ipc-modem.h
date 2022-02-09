@@ -53,6 +53,7 @@ struct ipc_modem_data {
 	bool call_done;
 	bool in_call;
 	bool out_call;
+	int state;
 };
 
 void ipc_modem_log(struct ipc_client *client,
