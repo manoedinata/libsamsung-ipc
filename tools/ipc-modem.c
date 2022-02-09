@@ -45,7 +45,6 @@ enum log_target log_target;
 
 int state = MODEM_STATE_LPM;
 int seq;
-int out_call;
 
 int seq_get(void)
 {
@@ -91,11 +90,11 @@ void modem_snd_audio_path_ctrl(struct ipc_client *client)
 
 
 
-void modem_exec_call_out(struct ipc_client *client, char *num)
+void modem_exec_call_out(struct ipc_modem_data *data, char *num)
 {
 	struct ipc_call_outgoing_data call_out;
 
-	modem_snd_no_mic_mute(client);
+	modem_snd_no_mic_mute(data->client);
 
 	memset(&call_out, 0, sizeof(struct ipc_call_outgoing_data));
 
@@ -107,15 +106,16 @@ void modem_exec_call_out(struct ipc_client *client, char *num)
 	call_out.prefix = IPC_CALL_PREFIX_NONE; //0x21;//IPC_CALL_PREFIX_NONE;
 	memcpy(call_out.number, num, call_out.number_length);
 
-	ipc_client_send(client, seq_get(), IPC_CALL_OUTGOING, IPC_TYPE_EXEC,
+	ipc_client_send(data->client,
+			seq_get(), IPC_CALL_OUTGOING, IPC_TYPE_EXEC,
 			(void *) &call_out,
 			sizeof(struct ipc_call_outgoing_data));
 
-	out_call = 1;
+	data->out_call = 1;
 
-	modem_snd_no_mic_mute(client);
-	modem_snd_spkr_volume_ctrl(client);
-	modem_snd_audio_path_ctrl(client);
+	modem_snd_no_mic_mute(data->client);
+	modem_snd_spkr_volume_ctrl(data->client);
+	modem_snd_audio_path_ctrl(data->client);
 }
 
 void modem_exec_call_answer(struct ipc_client *client)
@@ -271,7 +271,7 @@ void modem_response_call(struct ipc_modem_data *data, struct ipc_message *resp)
 		/*
 		 * if (data->in_call)
 		 * modem_exec_call_answer(data->client);
-		 * if (out_call)
+		 * if (data->out_call)
 		 * modem_snd_no_mic_mute(data->client);
 		 */
 		break;
@@ -384,7 +384,7 @@ void modem_response_net(struct ipc_modem_data *data,
 				      MODEM_LOG_INFO,
 				      "Requesting outgoing call to %s!\n",
 				      data->call_number);
-			modem_exec_call_out(data->client, data->call_number);
+			modem_exec_call_out(data, data->call_number);
 		}
 		data->call_done = 1;
 		break;
