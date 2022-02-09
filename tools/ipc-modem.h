@@ -45,6 +45,7 @@ enum log_target {
 struct ipc_modem_data {
 	struct ipc_client *client;
 	char call_number[14];
+	char sim_pin[8];
 	enum command command;
 	bool debug;
 	bool dry_run;

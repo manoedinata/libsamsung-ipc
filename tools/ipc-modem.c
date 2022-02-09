@@ -49,7 +49,6 @@ int in_call;
 int out_call;
 int call_done;
 
-char sim_pin[8];
 
 int seq_get(void)
 {
@@ -167,7 +166,7 @@ void modem_set_sec_pin_status(struct ipc_client *client, char *pin1, char *pin2)
 			(void *) &pin_status, sizeof(pin_status));
 }
 
-void modem_response_sec(struct ipc_client *client, struct ipc_message *resp)
+void modem_response_sec(struct ipc_modem_data *data, struct ipc_message *resp)
 {
 	struct ipc_sec_pin_status_response_data *sim_status;
 	unsigned char type;
@@ -179,49 +178,50 @@ void modem_response_sec(struct ipc_client *client, struct ipc_message *resp)
 
 		switch (sim_status->status) {
 		case IPC_SEC_PIN_STATUS_CARD_NOT_PRESENT:
-			ipc_modem_log(client, MODEM_LOG_INFO,
+			ipc_modem_log(data->client, MODEM_LOG_INFO,
 				      "SIM card is definitely absent\n");
 			break;
 		case IPC_SEC_PIN_STATUS_LOCK_SC:
 			switch (sim_status->facility_lock) {
 			case IPC_SEC_FACILITY_LOCK_TYPE_SC_PIN1_REQ:
 				ipc_modem_log(
-					client,
+					data->client,
 					MODEM_LOG_INFO,
 					"We need the PIN1 to unlock the card!"
 					"\n");
-				if (strlen(sim_pin) > 0) {
-					modem_set_sec_pin_status(client,
-								 sim_pin, NULL);
+				if (strlen(data->sim_pin) > 0) {
+					modem_set_sec_pin_status(data->client,
+								 data->sim_pin,
+								 NULL);
 				} else {
 					ipc_modem_log(
-						client,
+						data->client,
 						MODEM_LOG_ERROR,
 						"No SIM Pin, use --pin\n");
 				}
 				break;
 			case IPC_SEC_FACILITY_LOCK_TYPE_SC_PUK_REQ:
 				ipc_modem_log(
-					client,
+					data->client,
 					MODEM_LOG_INFO,
 					"Please provide the SIM card PUK!"
 					"\n");
 				break;
 			case IPC_SEC_FACILITY_LOCK_TYPE_SC_CARD_BLOCKED:
 				ipc_modem_log(
-					client,
+					data->client,
 					MODEM_LOG_INFO,
 					"Ouch, the SIM Card is blocked.\n");
 				break;
 			}
 			break;
 		case IPC_SEC_PIN_STATUS_INIT_COMPLETE:
-			ipc_modem_log(client, "3", "SIM init complete\n");
+			ipc_modem_log(data->client, "3", "SIM init complete\n");
 			if (state == MODEM_STATE_NORMAL)
 				state = MODEM_STATE_SIM_OK;
 			break;
 		case IPC_SEC_PIN_STATUS_PB_INIT_COMPLETE:
-			ipc_modem_log(client,
+			ipc_modem_log(data->client,
 				      MODEM_LOG_INFO,
 				      "SIM Phone Book init complete\n");
 			break;
@@ -232,13 +232,13 @@ void modem_response_sec(struct ipc_client *client, struct ipc_message *resp)
 		switch (type) {
 		case IPC_SEC_SIM_CARD_TYPE_UNKNOWN:
 			ipc_modem_log(
-				client,
+				data->client,
 				MODEM_LOG_INFO,
 				"No SIM card type: unknown (absent?)\n");
 			break;
 		case IPC_SEC_SIM_CARD_TYPE_SIM:
 		case IPC_SEC_SIM_CARD_TYPE_USIM:
-			ipc_modem_log(client,
+			ipc_modem_log(data->client,
 				      MODEM_LOG_INFO, "SIM card found\n");
 			break;
 		}
@@ -405,7 +405,7 @@ void modem_response_handle(struct ipc_modem_data *data,
 		modem_response_pwr(data->client, resp);
 		break;
 	case IPC_GROUP_SEC:
-		modem_response_sec(data->client, resp);
+		modem_response_sec(data, resp);
 		break;
 	case IPC_GROUP_SMS:
 		modem_response_sms(data->client, resp);
@@ -714,10 +714,10 @@ int main(int argc, char *argv[])
 			   (optarg)) {
 			if (strlen(optarg) < 8) {
 				assert(strlen(optarg) <
-				       sizeof(sim_pin));
+				       sizeof(data.sim_pin));
 
 				printf("[I] Got SIM PIN!\n");
-				strcpy(sim_pin, optarg);
+				strcpy(data.sim_pin, optarg);
 			} else {
 				printf("[E] SIM PIN is too long!\n");
 				return 1;
