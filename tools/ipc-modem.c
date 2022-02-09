@@ -49,7 +49,6 @@ int in_call;
 int out_call;
 int call_done;
 
-char call_number[14];
 char sim_pin[8];
 
 int seq_get(void)
@@ -360,7 +359,7 @@ void modem_response_pwr(__attribute__((unused)) struct ipc_client *client,
 	}
 }
 
-void modem_response_net(__attribute__((unused)) struct ipc_client *client,
+void modem_response_net(struct ipc_modem_data *data,
 			struct ipc_message *resp)
 {
 	struct ipc_net_regist_response_data *regi;
@@ -371,57 +370,58 @@ void modem_response_net(__attribute__((unused)) struct ipc_client *client,
 		regi = (struct ipc_net_regist_response_data *) resp->data;
 		if (regi->status == IPC_NET_REGISTRATION_STATUS_HOME)
 			ipc_modem_log(
-				client,
+				data->client,
 				MODEM_LOG_INFO,
 				"Registered with network successfully!\n");
 		break;
 	case IPC_NET_SERVING_NETWORK:
 		memcpy(mnc, (char *)((char *) resp->data + 3), 5);
 		mnc[5] = 0;
-		ipc_modem_log(client,
+		ipc_modem_log(data->client,
 			      "6",
 			      "Registered with network! "
 			      "Got PLMN (Mobile Network Code): '%s'\n",
 			      mnc);
 		if (call_done == 0) {
-			ipc_modem_log(client,
+			ipc_modem_log(data->client,
 				      MODEM_LOG_INFO,
 				      "Requesting outgoing call to %s!\n",
-				      call_number);
-			modem_exec_call_out(client, call_number);
+				      data->call_number);
+			modem_exec_call_out(data->client, data->call_number);
 		}
 		call_done = 1;
 		break;
 	}
 }
 
-void modem_response_handle(struct ipc_client *client, struct ipc_message *resp)
+void modem_response_handle(struct ipc_modem_data *data,
+			   struct ipc_message *resp)
 {
 	switch (IPC_GROUP(resp->command)) {
 	case IPC_GROUP_NET:
-		modem_response_net(client, resp);
+		modem_response_net(data, resp);
 		break;
 	case IPC_GROUP_PWR:
-		modem_response_pwr(client, resp);
+		modem_response_pwr(data->client, resp);
 		break;
 	case IPC_GROUP_SEC:
-		modem_response_sec(client, resp);
+		modem_response_sec(data->client, resp);
 		break;
 	case IPC_GROUP_SMS:
-		modem_response_sms(client, resp);
+		modem_response_sms(data->client, resp);
 		break;
 	case IPC_GROUP_CALL:
-		modem_response_call(client, resp);
+		modem_response_call(data->client, resp);
 		break;
 	case IPC_GROUP_DISP:
 		if (in_call)
-			modem_snd_no_mic_mute(client);
+			modem_snd_no_mic_mute(data->client);
 		break;
 	}
 }
 
 
-int modem_read_loop(struct ipc_client *client)
+int modem_read_loop(struct ipc_modem_data *data)
 {
 	struct ipc_message resp;
 	int rc;
@@ -431,21 +431,21 @@ int modem_read_loop(struct ipc_client *client)
 	while (1) {
 		usleep(3000);
 
-		rc = ipc_client_poll(client, NULL, NULL);
+		rc = ipc_client_poll(data->client, NULL, NULL);
 		if (rc < 0)
 			continue;
 
-		rc = ipc_client_recv(client, &resp);
+		rc = ipc_client_recv(data->client, &resp);
 		if (rc < 0) {
 			ipc_modem_log(
-				client,
+				data->client,
 				MODEM_LOG_ERROR,
 				"Can't RECV from modem: please run this again"
 			       "\n");
 			break;
 		}
 
-		modem_response_handle(client, &resp);
+		modem_response_handle(data, &resp);
 
 		if (resp.data != NULL)
 			free(resp.data);
@@ -625,7 +625,7 @@ int handle_command(struct ipc_modem_data *data)
 		ipc_modem_log(data->client,
 			      "1",
 			      "Starting modem_read_loop on FMT client\n");
-		modem_read_loop(data->client);
+		modem_read_loop(data);
 
 		modem_stop(data->client);
 		break;
@@ -687,9 +687,9 @@ int main(int argc, char *argv[])
 			if (optarg) {
 				if (strlen(optarg) < 14) {
 					assert(strlen(optarg) <
-					       sizeof(call_number));
+					       sizeof(data.call_number));
 					printf("[I] Got call number!\n");
-					strcpy(call_number, optarg);
+					strcpy(data.call_number, optarg);
 				} else {
 					printf("[E] "
 					       "Call number is too long!\n");
