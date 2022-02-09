@@ -657,9 +657,8 @@ void print_cmdline_opts(struct ipc_modem_data *data)
 		ipc_modem_log(data->client, MODEM_LOG_INFO, "dry-run mode\n");
 }
 
-int main(int argc, char *argv[])
+int parse_cmdline_opts(struct ipc_modem_data *data, int argc, char *argv[])
 {
-	struct ipc_modem_data data;
 	int c = 0;
 	int opt_i = 0;
 
@@ -673,13 +672,12 @@ int main(int argc, char *argv[])
 		{0,            0,                  0,  0 }
 	};
 
-	bzero((void *)&data, sizeof(data));
-
 	if (argc < 2) {
 		print_help();
 		exit(1);
 	}
 
+	/* Handle options arguments */
 	while (true) {
 		c = getopt_long(argc, argv, "", opt_l, &opt_i);
 		if (c != 0)
@@ -689,9 +687,9 @@ int main(int argc, char *argv[])
 			if (optarg) {
 				if (strlen(optarg) < 14) {
 					assert(strlen(optarg) <
-					       sizeof(data.call_number));
+					       sizeof(data->call_number));
 					printf("[I] Got call number!\n");
-					strcpy(data.call_number, optarg);
+					strcpy(data->call_number, optarg);
 				} else {
 					printf("[E] "
 					       "Call number is too long!\n");
@@ -706,9 +704,9 @@ int main(int argc, char *argv[])
 				return 1;
 			}
 		} else if (strcmp(opt_l[opt_i].name, "debug") == 0) {
-			data.debug = true;
+			data->debug = true;
 		} else if (strcmp(opt_l[opt_i].name, "dry-run") == 0) {
-			data.dry_run = true;
+			data->dry_run = true;
 		} else if (strncmp(opt_l[opt_i].name, "help", 4) == 0) {
 			print_help();
 			exit(1);
@@ -716,10 +714,10 @@ int main(int argc, char *argv[])
 			   (optarg)) {
 			if (strlen(optarg) < 8) {
 				assert(strlen(optarg) <
-				       sizeof(data.sim_pin));
+				       sizeof(data->sim_pin));
 
 				printf("[I] Got SIM PIN!\n");
-				strcpy(data.sim_pin, optarg);
+				strcpy(data->sim_pin, optarg);
 			} else {
 				printf("[E] SIM PIN is too long!\n");
 				return 1;
@@ -727,40 +725,22 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	if (data.dry_run)
-		data.client = ipc_client_create(IPC_CLIENT_TYPE_DUMMY);
-	else
-		data.client = ipc_client_create(IPC_CLIENT_TYPE_FMT);
-
-	if (data.client == 0) {
-		printf("[E] Could not create IPC client; aborting ...\n");
-		return 1;
-	}
-
-	if (data.debug == 0)
-		ipc_client_log_callback_register(data.client,
-						 modem_log_handler_quiet,
-						 NULL);
-	else
-		ipc_client_log_callback_register(data.client,
-						 modem_log_handler,
-						 NULL);
-
+	/* Handle non options arguments */
 	while (optind < argc) {
 		if (strncmp(argv[optind], "boot", 9) == 0) {
-			data.command = CMD_BOOT;
+			data->command = CMD_BOOT;
 			break;
 		} else if (strncmp(argv[optind], "power-on", 8) == 0) {
-			data.command = CMD_POWER_ON;
+			data->command = CMD_POWER_ON;
 			break;
 		} else if (strncmp(argv[optind], "power-off", 9) == 0) {
-			data.command = CMD_POWER_OFF;
+			data->command = CMD_POWER_OFF;
 			break;
 		} else if (strncmp(argv[optind], "start", 5) == 0) {
-			data.command = CMD_START;
+			data->command = CMD_START;
 			break;
 		} else {
-			ipc_modem_log(data.client,
+			ipc_modem_log(data->client,
 				      MODEM_LOG_ERROR,
 				      "Unknown argument: '%s'\n",
 				      argv[optind]);
@@ -771,7 +751,7 @@ int main(int argc, char *argv[])
 		optind++;
 	}
 
-	if (data.command == CMD_NONE) {
+	if (data->command == CMD_NONE) {
 		printf("\n"
 		       "Error: No command given. You need to use a command.\n"
 		       "       See the help below for more details.\n"
@@ -779,6 +759,42 @@ int main(int argc, char *argv[])
 		print_help();
 		return 1;
 	}
+
+	return 0;
+}
+
+int main(int argc, char *argv[])
+{
+	struct ipc_modem_data data;
+	int ret;
+
+	bzero((void *)&data, sizeof(data));
+
+	data.client = ipc_client_create(IPC_CLIENT_TYPE_DUMMY);
+
+	ret = parse_cmdline_opts(&data, argc, argv);
+	if (ret)
+		return ret;
+
+	if (!data.dry_run) {
+		ipc_client_destroy(data.client);
+		data.client = ipc_client_create(IPC_CLIENT_TYPE_FMT);
+
+		if (data.client == 0) {
+			printf("[E] "
+			       "Could not create IPC client; aborting ...\n");
+			return 1;
+		}
+	}
+
+	if (data.debug == 0)
+		ipc_client_log_callback_register(data.client,
+						 modem_log_handler_quiet,
+						 NULL);
+	else
+		ipc_client_log_callback_register(data.client,
+						 modem_log_handler,
+						 NULL);
 
 	print_cmdline_opts(&data);
 
