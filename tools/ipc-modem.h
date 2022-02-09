@@ -42,7 +42,8 @@ enum log_target {
 	LOG_TO_SYSLOG,
 };
 
-struct cmdline_opts {
+struct ipc_modem_data {
+	struct ipc_client *client;
 	enum command command;
 	bool debug;
 	bool dry_run;

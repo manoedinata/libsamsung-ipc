@@ -563,104 +563,101 @@ void print_help(void)
 	       "\t--pin=[PIN]                   provide SIM card PIN\n");
 }
 
-int handle_command(struct ipc_client *client,
-		   struct cmdline_opts *cmdline_opts)
+int handle_command(struct ipc_modem_data *data)
 {
 	int rc = 0;
 
-	switch (cmdline_opts->command) {
+	switch (data->command) {
 	case CMD_POWER_ON:
-		if (cmdline_opts->dry_run)
+		if (data->dry_run)
 			break;
 
-		rc = ipc_client_power_on(client);
+		rc = ipc_client_power_on(data->client);
 		if (rc < 0)
-			ipc_modem_log(client, "[E]",
-				       "[E] Something went wrong "
-				       "while powering modem on\n");
+			ipc_modem_log(data->client, "[E]",
+				      "[E] Something went wrong "
+				      "while powering modem on\n");
 		goto modem_quit;
 	case CMD_POWER_OFF:
-		if (cmdline_opts->dry_run)
+		if (data->dry_run)
 			break;
 
-		rc = ipc_client_power_off(client);
+		rc = ipc_client_power_off(data->client);
 		if (rc < 0)
-			ipc_modem_log(client,
+			ipc_modem_log(data->client,
 				      MODEM_LOG_ERROR,
 				      "Something went wrong "
 				      "while powering modem off\n");
 		goto modem_quit;
 	case CMD_BOOT:
-		if (cmdline_opts->dry_run)
+		if (data->dry_run)
 			break;
 
-		rc = ipc_client_boot(client);
+		rc = ipc_client_boot(data->client);
 		if (rc < 0)
-			ipc_modem_log(client,
+			ipc_modem_log(data->client,
 				      MODEM_LOG_ERROR,
 				      "Something went wrong "
 				      "while bootstrapping modem\n");
 		break;
 	case CMD_START:
-		if (cmdline_opts->dry_run) {
+		if (data->dry_run) {
 			ipc_modem_log(
-				client,
+				data->client,
 				"1",
 				"Starting dummy modem_read_loop on %s client\n",
 				"FMT");
-			modem_dummy_read_loop(client);
+			modem_dummy_read_loop(data->client);
 			break;
 		}
 
-		ipc_modem_log(client,
+		ipc_modem_log(data->client,
 			      "0", "Starting modem on FMT client\n");
 
-		rc = modem_start(client);
+		rc = modem_start(data->client);
 		if (rc < 0) {
-			ipc_modem_log(client,
+			ipc_modem_log(data->client,
 				      MODEM_LOG_ERROR,
 				      "Something went wrong\n");
-			modem_stop(client);
+			modem_stop(data->client);
 			return 1;
 		}
-		ipc_modem_log(client,
+		ipc_modem_log(data->client,
 			      "1",
 			      "Starting modem_read_loop on FMT client\n");
-		modem_read_loop(client);
+		modem_read_loop(data->client);
 
-		modem_stop(client);
+		modem_stop(data->client);
 		break;
 	default:
 		/* We should handle all commands */
-		ipc_modem_log(client,
+		ipc_modem_log(data->client,
 			      MODEM_LOG_ERROR,
 			      "%s: Unknown command %d\n", __func__,
-			      cmdline_opts->command);
+			      data->command);
 
 		assert(false);
 	}
 
 modem_quit:
-	if (client != 0)
-		ipc_client_destroy(client);
+	if (data->client != 0)
+		ipc_client_destroy(data->client);
 
 	return rc;
 }
 
-void print_cmdline_opts(struct ipc_client *client,
-			struct cmdline_opts *cmdline_opts)
+void print_cmdline_opts(struct ipc_modem_data *data)
 
 {
-	if (cmdline_opts->debug)
-		ipc_modem_log(client, MODEM_LOG_INFO, "Debug enabled\n");
-	if (cmdline_opts->debug && cmdline_opts->dry_run)
-		ipc_modem_log(client, MODEM_LOG_INFO, "dry-run mode\n");
+	if (data->debug)
+		ipc_modem_log(data->client, MODEM_LOG_INFO, "Debug enabled\n");
+	if (data->debug && data->dry_run)
+		ipc_modem_log(data->client, MODEM_LOG_INFO, "dry-run mode\n");
 }
 
 int main(int argc, char *argv[])
 {
-	struct cmdline_opts cmdline_opts;
-	struct ipc_client *client;
+	struct ipc_modem_data data;
 	int c = 0;
 	int opt_i = 0;
 
@@ -674,7 +671,7 @@ int main(int argc, char *argv[])
 		{0,            0,                  0,  0 }
 	};
 
-	bzero((void *)&cmdline_opts, sizeof(cmdline_opts));
+	bzero((void *)&data, sizeof(data));
 
 	if (argc < 2) {
 		print_help();
@@ -707,9 +704,9 @@ int main(int argc, char *argv[])
 				return 1;
 			}
 		} else if (strcmp(opt_l[opt_i].name, "debug") == 0) {
-			cmdline_opts.debug = true;
+			data.debug = true;
 		} else if (strcmp(opt_l[opt_i].name, "dry-run") == 0) {
-			cmdline_opts.dry_run = true;
+			data.dry_run = true;
 		} else if (strncmp(opt_l[opt_i].name, "help", 4) == 0) {
 			print_help();
 			exit(1);
@@ -728,40 +725,40 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	if (cmdline_opts.dry_run)
-		client = ipc_client_create(IPC_CLIENT_TYPE_DUMMY);
+	if (data.dry_run)
+		data.client = ipc_client_create(IPC_CLIENT_TYPE_DUMMY);
 	else
-		client = ipc_client_create(IPC_CLIENT_TYPE_FMT);
+		data.client = ipc_client_create(IPC_CLIENT_TYPE_FMT);
 
-	if (client == 0) {
+	if (data.client == 0) {
 		printf("[E] Could not create IPC client; aborting ...\n");
 		return 1;
 	}
 
-	if (cmdline_opts.debug == 0)
-		ipc_client_log_callback_register(client,
+	if (data.debug == 0)
+		ipc_client_log_callback_register(data.client,
 						 modem_log_handler_quiet,
 						 NULL);
 	else
-		ipc_client_log_callback_register(client,
+		ipc_client_log_callback_register(data.client,
 						 modem_log_handler,
 						 NULL);
 
 	while (optind < argc) {
 		if (strncmp(argv[optind], "boot", 9) == 0) {
-			cmdline_opts.command = CMD_BOOT;
+			data.command = CMD_BOOT;
 			break;
 		} else if (strncmp(argv[optind], "power-on", 8) == 0) {
-			cmdline_opts.command = CMD_POWER_ON;
+			data.command = CMD_POWER_ON;
 			break;
 		} else if (strncmp(argv[optind], "power-off", 9) == 0) {
-			cmdline_opts.command = CMD_POWER_OFF;
+			data.command = CMD_POWER_OFF;
 			break;
 		} else if (strncmp(argv[optind], "start", 5) == 0) {
-			cmdline_opts.command = CMD_START;
+			data.command = CMD_START;
 			break;
 		} else {
-			ipc_modem_log(client,
+			ipc_modem_log(data.client,
 				      MODEM_LOG_ERROR,
 				      "Unknown argument: '%s'\n",
 				      argv[optind]);
@@ -772,7 +769,7 @@ int main(int argc, char *argv[])
 		optind++;
 	}
 
-	if (cmdline_opts.command == CMD_NONE) {
+	if (data.command == CMD_NONE) {
 		printf("\n"
 		       "Error: No command given. You need to use a command.\n"
 		       "       See the help below for more details.\n"
@@ -781,7 +778,7 @@ int main(int argc, char *argv[])
 		return 1;
 	}
 
-	print_cmdline_opts(client, &cmdline_opts);
+	print_cmdline_opts(&data);
 
-	return handle_command(client, &cmdline_opts);
+	return handle_command(&data);
 }
