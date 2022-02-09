@@ -43,48 +43,48 @@
 
 enum log_target log_target;
 
-int seq;
-
-int seq_get(void)
+int seq_get(struct ipc_modem_data *data)
 {
-	if (seq == 0xff)
-		seq = 0x00;
+	if (data->seq == 0xff)
+		data->seq = 0x00;
 
-	seq++;
+	data->seq++;
 
-	return seq;
+	return data->seq;
 }
 
-void modem_snd_no_mic_mute(struct ipc_client *client)
+void modem_snd_no_mic_mute(struct ipc_modem_data *data)
 {
-	uint8_t data = 0;
+	uint8_t mic_mute_data = 0;
 
-	ipc_client_send(client, seq_get(), IPC_SND_MIC_MUTE_CTRL, IPC_TYPE_SET,
-			(void *) &data, 1);
+	ipc_client_send(data->client,
+			seq_get(data), IPC_SND_MIC_MUTE_CTRL, IPC_TYPE_SET,
+			(void *) &mic_mute_data, 1);
 }
 
-void modem_snd_clock_ctrl(struct ipc_client *client)
+void modem_snd_clock_ctrl(struct ipc_modem_data *data)
 {
-	uint8_t data = 0x01;
+	uint8_t clock_ctrl_data = 0x01;
 
-	ipc_client_send(client, seq_get(), IPC_SND_CLOCK_CTRL, IPC_TYPE_EXEC,
-			(void *) &data, 1);
+	ipc_client_send(data->client,
+			seq_get(data), IPC_SND_CLOCK_CTRL, IPC_TYPE_EXEC,
+			(void *) &clock_ctrl_data, 1);
 }
 
-void modem_snd_spkr_volume_ctrl(struct ipc_client *client)
+void modem_snd_spkr_volume_ctrl(struct ipc_modem_data *data)
 {
-	uint16_t data = 0x0411;
+	uint16_t spkr_volume_data = 0x0411;
 
-	ipc_client_send(client, seq_get(), IPC_SND_SPKR_VOLUME_CTRL,
-			IPC_TYPE_SET, (void *) &data, 2);
+	ipc_client_send(data->client, seq_get(data), IPC_SND_SPKR_VOLUME_CTRL,
+			IPC_TYPE_SET, (void *) &spkr_volume_data, 2);
 }
 
-void modem_snd_audio_path_ctrl(struct ipc_client *client)
+void modem_snd_audio_path_ctrl(struct ipc_modem_data *data)
 {
-	uint8_t data = 0x01;
+	uint8_t audio_path_ctrl_data = 0x01;
 
-	ipc_client_send(client, seq_get(), IPC_SND_AUDIO_PATH_CTRL,
-			IPC_TYPE_SET, (void *) &data, 1);
+	ipc_client_send(data->client, seq_get(data), IPC_SND_AUDIO_PATH_CTRL,
+			IPC_TYPE_SET, (void *) &audio_path_ctrl_data, 1);
 }
 
 
@@ -93,7 +93,7 @@ void modem_exec_call_out(struct ipc_modem_data *data, char *num)
 {
 	struct ipc_call_outgoing_data call_out;
 
-	modem_snd_no_mic_mute(data->client);
+	modem_snd_no_mic_mute(data);
 
 	memset(&call_out, 0, sizeof(struct ipc_call_outgoing_data));
 
@@ -106,59 +106,64 @@ void modem_exec_call_out(struct ipc_modem_data *data, char *num)
 	memcpy(call_out.number, num, call_out.number_length);
 
 	ipc_client_send(data->client,
-			seq_get(), IPC_CALL_OUTGOING, IPC_TYPE_EXEC,
+			seq_get(data), IPC_CALL_OUTGOING, IPC_TYPE_EXEC,
 			(void *) &call_out,
 			sizeof(struct ipc_call_outgoing_data));
 
 	data->out_call = 1;
 
-	modem_snd_no_mic_mute(data->client);
-	modem_snd_spkr_volume_ctrl(data->client);
-	modem_snd_audio_path_ctrl(data->client);
+	modem_snd_no_mic_mute(data);
+	modem_snd_spkr_volume_ctrl(data);
+	modem_snd_audio_path_ctrl(data);
 }
 
-void modem_exec_call_answer(struct ipc_client *client)
+void modem_exec_call_answer(struct ipc_modem_data *data)
 {
-	modem_snd_clock_ctrl(client);
+	modem_snd_clock_ctrl(data);
 
-	ipc_client_send(client, seq_get(), IPC_CALL_ANSWER, IPC_TYPE_EXEC, NULL,
-			0);
+	ipc_client_send(data->client,
+			seq_get(data), IPC_CALL_ANSWER, IPC_TYPE_EXEC, NULL, 0);
 
-	modem_snd_no_mic_mute(client);
+	modem_snd_no_mic_mute(data);
 }
 
-void modem_get_call_list(struct ipc_client *client)
+void modem_get_call_list(struct ipc_modem_data *data)
 {
-	ipc_client_send(client, seq_get(), IPC_CALL_LIST, IPC_TYPE_GET, NULL,
-			0);
+	ipc_client_send(data->client,
+			seq_get(data), IPC_CALL_LIST, IPC_TYPE_GET, NULL, 0);
 
-	modem_snd_no_mic_mute(client);
+	modem_snd_no_mic_mute(data);
 }
 
-void modem_exec_power_normal(struct ipc_client *client)
+void modem_exec_power_normal(struct ipc_modem_data *data)
 {
-	uint16_t data = 0x0202;
+	uint16_t exec_data = 0x0202;
 
-	ipc_client_send(client, seq_get(), IPC_PWR_PHONE_STATE, IPC_TYPE_EXEC,
-			(void *) &data, sizeof(data));
+	ipc_client_send(data->client,
+			seq_get(data), IPC_PWR_PHONE_STATE, IPC_TYPE_EXEC,
+			(void *) &exec_data, sizeof(data));
 }
 
-void modem_set_sms_device_ready(struct ipc_client *client)
+void modem_set_sms_device_ready(struct ipc_modem_data *data)
 {
-	ipc_client_send(client, seq_get(), IPC_SMS_DEVICE_READY, IPC_TYPE_SET,
+	ipc_client_send(data->client,
+			seq_get(data), IPC_SMS_DEVICE_READY, IPC_TYPE_SET,
 			NULL, 0);
 }
 
-void modem_set_sec_pin_status(struct ipc_client *client, char *pin1, char *pin2)
+void modem_set_sec_pin_status(struct ipc_modem_data *data,
+			      char *pin1, char *pin2)
 {
 	struct ipc_sec_pin_status_request_data pin_status;
 
-	ipc_modem_log(client, MODEM_LOG_INFO, "Sending PIN1 unlock request\n");
+	ipc_modem_log(data->client,
+		      MODEM_LOG_INFO, "Sending PIN1 unlock request\n");
 
 	ipc_sec_pin_status_setup(&pin_status, IPC_SEC_PIN_TYPE_PIN1, pin1,
 				 pin2);
 
-	ipc_client_send(client, seq_get(), IPC_SEC_PIN_STATUS, IPC_TYPE_SET,
+	ipc_client_send(data->client,
+			seq_get(data), IPC_SEC_PIN_STATUS, IPC_TYPE_SET,
 			(void *) &pin_status, sizeof(pin_status));
 }
 
@@ -186,7 +191,7 @@ void modem_response_sec(struct ipc_modem_data *data, struct ipc_message *resp)
 					"We need the PIN1 to unlock the card!"
 					"\n");
 				if (strlen(data->sim_pin) > 0) {
-					modem_set_sec_pin_status(data->client,
+					modem_set_sec_pin_status(data,
 								 data->sim_pin,
 								 NULL);
 				} else {
@@ -252,11 +257,11 @@ void modem_response_sms(struct ipc_modem_data *data, struct ipc_message *resp)
 				"4",
 				"Modem is ready, requesting normal power mode"
 				"\n");
-			modem_exec_power_normal(data->client);
+			modem_exec_power_normal(data);
 		} else if (data->state == MODEM_STATE_SIM_OK) {
 			ipc_modem_log(data->client,
 				      "5", "Modem is fully ready\n");
-			modem_set_sms_device_ready(data->client);
+			modem_set_sms_device_ready(data);
 		}
 		break;
 	}
@@ -272,14 +277,14 @@ void modem_response_call(struct ipc_modem_data *data, struct ipc_message *resp)
 		 * if (data->in_call)
 		 * modem_exec_call_answer(data->client);
 		 * if (data->out_call)
-		 * modem_snd_no_mic_mute(data->client);
+		 * modem_snd_no_mic_mute(data);
 		 */
 		break;
 	case IPC_CALL_INCOMING:
 		ipc_modem_log(data->client,
 			      MODEM_LOG_INFO, "Got an incoming call!\n");
 		data->in_call = 1;
-		modem_get_call_list(data->client);
+		modem_get_call_list(data);
 		break;
 	case IPC_CALL_STATUS:
 		stat = (struct ipc_call_status_data *)resp->data;
@@ -289,7 +294,7 @@ void modem_response_call(struct ipc_modem_data *data, struct ipc_message *resp)
 				data->client,
 				MODEM_LOG_INFO,
 				"Sending clock ctrl and restore alsa\n");
-			modem_snd_clock_ctrl(data->client);
+			modem_snd_clock_ctrl(data);
 			/*
 			 * system("alsa_ctl -f /data/alsa_state_modem restore");
 			 */
@@ -298,24 +303,24 @@ void modem_response_call(struct ipc_modem_data *data, struct ipc_message *resp)
 				      MODEM_LOG_INFO,
 				      "CALL STATUS DIALING!!!\n");
 
-			modem_snd_spkr_volume_ctrl(data->client);
-			modem_snd_audio_path_ctrl(data->client);
+			modem_snd_spkr_volume_ctrl(data);
+			modem_snd_audio_path_ctrl(data);
 
-			modem_get_call_list(data->client);
+			modem_get_call_list(data);
 		}
 
 		if (stat->status == IPC_CALL_STATUS_CONNECTED) {
 			ipc_modem_log(data->client,
 				      MODEM_LOG_INFO,
 				      "CALL STATUS CONNECTED!!!\n");
-			modem_snd_no_mic_mute(data->client);
+			modem_snd_no_mic_mute(data);
 		}
 
 		if (stat->status == IPC_CALL_STATUS_RELEASED) {
 			ipc_modem_log(data->client,
 				      MODEM_LOG_INFO,
 				      "CALL STATUS RELEASED!!!\n");
-			modem_snd_no_mic_mute(data->client);
+			modem_snd_no_mic_mute(data);
 		}
 		break;
 	}
@@ -412,7 +417,7 @@ void modem_response_handle(struct ipc_modem_data *data,
 		break;
 	case IPC_GROUP_DISP:
 		if (data->in_call)
-			modem_snd_no_mic_mute(data->client);
+			modem_snd_no_mic_mute(data);
 		break;
 	}
 }
