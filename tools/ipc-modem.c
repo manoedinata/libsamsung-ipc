@@ -46,8 +46,6 @@ enum log_target log_target;
 int state = MODEM_STATE_LPM;
 int seq;
 int out_call;
-int call_done;
-
 
 int seq_get(void)
 {
@@ -381,14 +379,14 @@ void modem_response_net(struct ipc_modem_data *data,
 			      "Registered with network! "
 			      "Got PLMN (Mobile Network Code): '%s'\n",
 			      mnc);
-		if (call_done == 0) {
+		if (data->call_done == 0) {
 			ipc_modem_log(data->client,
 				      MODEM_LOG_INFO,
 				      "Requesting outgoing call to %s!\n",
 				      data->call_number);
 			modem_exec_call_out(data->client, data->call_number);
 		}
-		call_done = 1;
+		data->call_done = 1;
 		break;
 	}
 }

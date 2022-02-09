@@ -50,6 +50,7 @@ struct ipc_modem_data {
 	bool debug;
 	bool dry_run;
 	/* State */
+	bool call_done;
 	bool in_call;
 };
 
