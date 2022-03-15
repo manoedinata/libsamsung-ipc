@@ -161,6 +161,22 @@ LOCAL_EXPORT_C_INCLUDE_DIRS := $(local_export_c_include_dirs)
 
 include $(BUILD_SHARED_LIBRARY)
 
+#######################
+# https-send-sms tool #
+#######################
+include $(CLEAR_VARS)
+include $(LOCAL_PATH)/android_versions.mk
+
+LOCAL_MODULE := https-send-sms
+LOCAL_MODULE_TAGS := optional
+
+LOCAL_SRC_FILES := tools/https-send-sms.c
+
+LOCAL_C_INCLUDES := $(LOCAL_PATH)/tools/include/glibc
+LOCAL_SHARED_LIBRARIES := libcurl
+
+include $(BUILD_EXECUTABLE)
+
 ##################
 # ipc-modem tool #
 ##################

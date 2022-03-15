@@ -27,6 +27,7 @@ valgrind.*.log
 /scripts/src/**
 
 # Tools
+/tools/https-send-sms
 /tools/ipc-modem/ipc-modem
 /tools/ipc-test
 /tools/nv_data-imei

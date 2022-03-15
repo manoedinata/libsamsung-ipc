@@ -6,6 +6,7 @@ XZ_OPT=-v9e
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 
 OPENSSL_REQUIRED=1.0.0e
+LIBCURL_REQUIRED=7.78.0
 
 #------------------------------------------------------------------------------
 # pkg-config
@@ -18,7 +19,16 @@ PKG_PROG_PKG_CONFIG
 PKG_CHECK_MODULES(OPENSSL, openssl >= $OPENSSL_REQUIRED)
 AC_SUBST(OPENSSL_CFLAGS)
 AC_SUBST(OPENSSL_LIBS)
+
+#------------------------------------------------------------------------------
+# valgrind
 AC_SUBST(VALGRIND)
+
+#------------------------------------------------------------------------------
+# libcurl
+PKG_CHECK_MODULES(LIBCURL, libcurl >= $LIBCURL_REQUIRED)
+AC_SUBST(LIBCURL_CFLAGS)
+AC_SUBST(LIBCURL_LIBS)
 
 #------------------------------------------------------------------------------
 # check for debugging

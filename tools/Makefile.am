@@ -2,9 +2,11 @@ NULL =
 
 AM_CFLAGS = \
 	-I$(top_srcdir)/include \
+	$(LIBCURL_CFLAGS) \
 	$(NULL)
 
 bin_PROGRAMS = \
+	https-send-sms \
 	ipc-test \
 	nv_data-imei \
 	nv_data-md5 \
@@ -20,6 +22,10 @@ TEST_EXTENSIONS = .py
 TESTS = \
 	tests/nv_data-imei.py \
 	tests/nv_data-md5.py
+
+https_send_sms_SOURCES = https-send-sms.c
+https_send_sms_LDADD = $(LIBCURL_LIBS)
+https_send_sms_LDFLAGS =
 
 ipc_test_SOURCES = ipc-test.c
 ipc_test_LDADD = $(top_builddir)/samsung-ipc/libsamsung-ipc.la
