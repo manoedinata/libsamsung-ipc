@@ -505,7 +505,7 @@ void print_help(void)
 	       "\tstart                         "
 	       "boot modem and start read loop\n"
 	       "arguments:\n"
-	       "\t--call=[NUMBER]               call NUMBER\n"
+	       "\t--call=<NUMBER>               call NUMBER\n"
 	       "\t--debug                       enable debug messages\n"
 	       "\t--dry-run                     "
 	       "Test the ipc-modem program without talking to the modem.\n"
