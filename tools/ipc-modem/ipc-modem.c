@@ -512,7 +512,7 @@ void print_help(void)
 	       "\t--help                        print this help message\n"
 	       "\t--log-target=[stdout|syslog]  "
 	       "direct logs to stdout or syslog\n"
-	       "\t--pin=[PIN]                   provide SIM card PIN\n");
+	       "\t--pin=<PIN>                   provide SIM card PIN\n");
 }
 
 int handle_command(struct ipc_modem_data *data)
