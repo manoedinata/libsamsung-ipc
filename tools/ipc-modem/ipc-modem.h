@@ -25,21 +25,12 @@
 #define MODEM_STATE_NORMAL  2
 #define MODEM_STATE_SIM_OK  4
 
-#define MODEM_LOG_ERROR "E"
-#define MODEM_LOG_INFO  "I"
-#define MODEM_LOG_DEBUG "D"
-
 enum command {
 	CMD_NONE,
 	CMD_START,
 	CMD_BOOT,
 	CMD_POWER_ON,
 	CMD_POWER_OFF,
-};
-
-enum log_target {
-	LOG_TO_STDOUT,
-	LOG_TO_SYSLOG,
 };
 
 struct ipc_modem_data {
@@ -56,8 +47,5 @@ struct ipc_modem_data {
 	int state;
 	int seq;
 };
-
-void ipc_modem_log(struct ipc_client *client,
-		   char *prefix, const char *message, ...);
 
 #endif /* IPC_MODEM */

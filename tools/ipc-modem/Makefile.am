@@ -12,6 +12,6 @@ PY_LOG_COMPILER = $(PYTHON)
 TEST_EXTENSIONS = .py
 TESTS = tests/ipc-modem.py
 
-ipc_modem_SOURCES = ipc-modem.c
+ipc_modem_SOURCES = ipc-modem.c ipc-modem-log.c
 ipc_modem_LDADD = $(top_builddir)/samsung-ipc/libsamsung-ipc.la
 ipc_modem_LDFLAGS = -lpthread

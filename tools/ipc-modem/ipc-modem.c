@@ -22,14 +22,12 @@
 #include <fcntl.h>
 #include <getopt.h>
 #include <pthread.h>
-#include <stdarg.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <strings.h>
 #include <sysexits.h>
-#include <syslog.h>
 #include <termios.h>
 #include <unistd.h>
 #include <string.h>
@@ -41,8 +39,7 @@
 #include <samsung-ipc.h>
 
 #include "ipc-modem.h"
-
-enum log_target log_target;
+#include "ipc-modem-log.h"
 
 int seq_get(struct ipc_modem_data *data)
 {
@@ -468,54 +465,6 @@ int modem_dummy_read_loop(__attribute__((unused)) struct ipc_client *client)
 	return 0;
 }
 
-void modem_log_handler(void *user_data, const char *msg)
-{
-	int i, l;
-	char *message;
-
-	message = strdup(msg);
-	l = strlen(message);
-
-	if (l > 1) {
-		for (i = l ; i > 0 ; i--) {
-			if (message[i] == '\n')
-				message[i] = 0;
-			else if (message[i] != 0)
-				break;
-		}
-
-		if (log_target == LOG_TO_STDOUT && user_data)
-			printf("[%s] %s\n", (char *)user_data, message);
-		else if (log_target == LOG_TO_STDOUT)
-			printf("[%s] %s\n", MODEM_LOG_DEBUG, message);
-		else if (log_target == LOG_TO_SYSLOG && user_data)
-			syslog(LOG_INFO,
-			       "[%s] %s\n", (char *)user_data, message);
-		else if (log_target == LOG_TO_SYSLOG)
-			syslog(LOG_INFO, "[%s] %s\n", MODEM_LOG_DEBUG, message);
-	}
-
-	free(message);
-}
-
-void modem_log_handler_quiet(__attribute__((unused)) void *user_data,
-			     __attribute__((unused)) const char *msg)
-{
-}
-
-void ipc_modem_log(__attribute__((unused)) struct ipc_client *client,
-		   char *prefix, const char *message, ...)
-{
-	va_list args;
-	char buffer[4096];
-
-	va_start(args, message);
-	vsnprintf((char *) &buffer, sizeof(buffer), message, args);
-	va_end(args);
-
-	modem_log_handler(prefix, buffer);
-}
-
 int modem_start(struct ipc_client *client)
 {
 	int rc = -1;
@@ -709,7 +658,7 @@ int parse_cmdline_opts(struct ipc_modem_data *data, int argc, char *argv[])
 		} else if ((strcmp(opt_l[opt_i].name, "log-target") == 0)) {
 			if (optarg) {
 				if (!strcmp(optarg, "syslog")) {
-					log_target = LOG_TO_SYSLOG;
+					ipc_modem_set_log_target(LOG_TO_SYSLOG);
 				} else if (strcmp(optarg, "stdout")) {
 					ipc_modem_log(
 						data->client, MODEM_LOG_ERROR,
