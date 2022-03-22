@@ -53,6 +53,7 @@ AC_CONFIG_FILES([
     samsung-ipc/Makefile
     samsung-ipc/tests/Makefile
     tools/Makefile
+    tools/ipc-modem/Makefile
 ])
 
 

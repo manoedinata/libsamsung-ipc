@@ -170,7 +170,7 @@ include $(LOCAL_PATH)/android_versions.mk
 LOCAL_MODULE := ipc-modem
 LOCAL_MODULE_TAGS := optional
 
-LOCAL_SRC_FILES := tools/ipc-modem.c
+LOCAL_SRC_FILES := tools/ipc-modem/ipc-modem.c
 
 LOCAL_C_INCLUDES := $(LOCAL_PATH)/include $(LOCAL_PATH)/tools/include/glibc
 LOCAL_SHARED_LIBRARIES := libsamsung-ipc
@@ -186,7 +186,7 @@ include $(LOCAL_PATH)/android_versions.mk
 LOCAL_MODULE := ipc-modem-static
 LOCAL_MODULE_TAGS := optional
 
-LOCAL_SRC_FILES := tools/ipc-modem.c
+LOCAL_SRC_FILES := tools/ipc-modem/ipc-modem.c
 
 LOCAL_C_INCLUDES := $(LOCAL_PATH)/include $(LOCAL_PATH)/tools/include/glibc
 LOCAL_STATIC_LIBRARIES := libsamsung-ipc

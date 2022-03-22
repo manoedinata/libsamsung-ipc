@@ -47,7 +47,7 @@ INSTALL
 *.pc
 build
 core
-ipc-modem
+tools/ipc-modem/ipc-modem
 ipc-test
 nv_data-imei
 nv_data-md5

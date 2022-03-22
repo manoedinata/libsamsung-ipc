@@ -5,7 +5,6 @@ AM_CFLAGS = \
 	$(NULL)
 
 bin_PROGRAMS = \
-	ipc-modem \
 	ipc-test \
 	nv_data-imei \
 	nv_data-md5 \
@@ -18,13 +17,9 @@ AM_TESTS_ENVIRONMENT = VALGRIND='$(VALGRIND)'; export VALGRIND;
 endif
 PY_LOG_COMPILER = $(PYTHON)
 TEST_EXTENSIONS = .py
-TESTS = tests/ipc-modem.py \
+TESTS = \
 	tests/nv_data-imei.py \
 	tests/nv_data-md5.py
-
-ipc_modem_SOURCES = ipc-modem.c
-ipc_modem_LDADD = $(top_builddir)/samsung-ipc/libsamsung-ipc.la
-ipc_modem_LDFLAGS = -lpthread
 
 ipc_test_SOURCES = ipc-test.c
 ipc_test_LDADD = $(top_builddir)/samsung-ipc/libsamsung-ipc.la

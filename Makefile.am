@@ -5,6 +5,7 @@ SUBDIRS = \
 	samsung-ipc/tests \
 	include \
 	tools \
+	tools/ipc-modem \
 	$(NULL)
 
 pkgconfigdir = $(libdir)/pkgconfig
