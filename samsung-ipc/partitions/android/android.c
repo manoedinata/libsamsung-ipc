@@ -84,8 +84,7 @@ int open_android_modem_partition_by_name(struct ipc_client *client,
 			return -errno;
 		}
 
-		strncpy(path, partitions_dirnames[i],
-			strlen(partitions_dirnames[i]));
+		strcpy(path, partitions_dirnames[i]);
 		strcat(path, name);
 
 		ipc_client_log(client, "%s: Trying to open %s",
