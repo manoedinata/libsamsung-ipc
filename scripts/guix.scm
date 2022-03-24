@@ -53,13 +53,15 @@
  (guix packages)
  (gnu packages android)
  (gnu packages autotools)
+ (gnu packages commencement)
  (gnu packages disk)
  (gnu packages linux)
  (gnu packages llvm)
  (gnu packages pkg-config)
  (gnu packages python)
  (gnu packages python-xyz)
- (gnu packages tls))
+ (gnu packages tls)
+ (gnu packages valgrind))
 
 (define %common-strict-cflags
   (string-append
@@ -103,10 +105,12 @@
      `(("autoreconf" ,autoconf)
        ("aclocal" ,automake)
        ("ddrescue", ddrescue)
+       ("libc:debug", (@@ (gnu packages commencement) glibc-final) "debug")
        ("libtool" ,libtool)
        ("pkgconfig" ,pkg-config)
        ("python" ,python)
-       ("python-sh" ,python-sh)))
+       ("python-sh" ,python-sh)
+       ("valgrind" ,valgrind)))
     (inputs
      `(("openssl" ,openssl)))
     (arguments
@@ -116,9 +120,19 @@
            (lambda _
              (substitute* (find-files "." ".*\\.py$")
                (("/usr/bin/env python") (which "python3")))
-           #t)))
+           #t))
+         (add-after 'patch-python 'fix-valgrind
+           (lambda _
+             (substitute* (find-files "." ".*\\.py$")
+                          (("'--leak-check=full',")
+                           (string-append
+                            "'--leak-check=full', '--extra-debuginfo-path="
+                            (assoc-ref %build-inputs "libc:debug")
+                            "/lib/debug',")))
+             #t)))
        #:configure-flags
-       (list "--enable-debug")))
+       (list "--enable-debug"
+             "--enable-valgrind-tests")))
     (synopsis "libsamsung-ipc is a free software implementation of the Samsung IPC modem protocol")
     (description
      "libsamsung-ipc is a free software implementation of the Samsung IPC modem protocol,

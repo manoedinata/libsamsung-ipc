@@ -35,7 +35,14 @@ class libsamsung_ipc_test(object):
                 + os.sep \
                 + 'libsamsung-ipc-test'
 
-        self.run = sh.Command(command_path)
+        if 'VALGRIND' in os.environ:
+            self.run = sh.Command(os.environ['VALGRIND'])
+            self.run = self.run.bake('-v',
+                                     '--log-file=valgrind.%p.log',
+                                     '--leak-check=full',
+                                     command_path)
+        else:
+            self.run = sh.Command(command_path)
 
     def run_all_tests(self):
         output = str(self.run('list-tests')).split(os.linesep)

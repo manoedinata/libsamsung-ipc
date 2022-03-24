@@ -20,7 +20,8 @@ makedepends=('autoconf'
              'pkg-config'
              'python'
              'python-sh'
-             'sed')
+             'sed'
+             'valgrind')
 depends=('openssl')
 
 pkgver() {
@@ -39,7 +40,9 @@ pkgver() {
 
 build() {
   ../../autogen.sh
-  ../../configure --prefix=/usr --enable-debug
+  ../../configure \
+    --prefix=/usr \
+    --enable-debug --enable-valgrind-tests
   make
 }
 

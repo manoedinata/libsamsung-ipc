@@ -58,7 +58,15 @@ class NvDataImei(object):
                 + os.sep \
                 + 'nv_data-imei'
 
-        self.nv_data_imei = sh.Command(command_path)
+        if 'VALGRIND' in os.environ:
+            self.nv_data_imei = sh.Command(os.environ['VALGRIND'])
+            self.nv_data_imei = self.nv_data_imei.bake(
+                '-v',
+                '--log-file=valgrind.%p.log',
+                '--leak-check=full',
+                command_path)
+        else:
+            self.nv_data_imei = sh.Command(command_path)
 
     def test_help(self):
         try:

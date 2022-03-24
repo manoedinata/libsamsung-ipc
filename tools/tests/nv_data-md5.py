@@ -44,7 +44,15 @@ class NvDataMD5(object):
                 + os.sep \
                 + 'nv_data-md5'
 
-        self.nv_data_md5 = sh.Command(command_path)
+        if 'VALGRIND' in os.environ:
+            self.nv_data_md5 = sh.Command(os.environ['VALGRIND'])
+            self.nv_data_md5 = self.nv_data_md5.bake(
+                '-v',
+                '--log-file=valgrind.%p.log',
+                '--leak-check=full',
+                command_path)
+        else:
+            self.nv_data_md5 = sh.Command(command_path)
     def test_help(self):
         try:
             self.nv_data_md5()

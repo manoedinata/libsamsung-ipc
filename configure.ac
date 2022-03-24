@@ -18,6 +18,7 @@ PKG_PROG_PKG_CONFIG
 PKG_CHECK_MODULES(OPENSSL, openssl >= $OPENSSL_REQUIRED)
 AC_SUBST(OPENSSL_CFLAGS)
 AC_SUBST(OPENSSL_LIBS)
+AC_SUBST(VALGRIND)
 
 #------------------------------------------------------------------------------
 # check for debugging
@@ -28,7 +29,23 @@ AC_ARG_ENABLE(debug,
 AM_CONDITIONAL( [WANT_DEBUG], [test x"$debug" = x"yes"])
 
 #------------------------------------------------------------------------------
+# TODO: GCC has --enable-checking= for extensive runtime checks and one of the
+#       available values is valgrind, so it would be a good idea to convert to
+#       it for consistency across free software projects.
+AC_ARG_ENABLE(valgrind-tests,
+  [  --enable-valgrind-tests  Build with -ggdb3, -O0 and use valgrind from PATH during tests (default=disabled)],
+  [valgrind_tests=$enableval],
+  [valgrind_tests="no"])
 
+AM_CONDITIONAL( [WANT_VALGRIND_CHECKING], [test x"$valgrind_tests" = x"yes"])
+
+AS_IF([test x"$valgrind_tests" = x"yes"],
+  [AC_CHECK_PROG([VALGRIND], [valgrind], [valgrind])
+   AS_IF(
+     [test x"$VALGRIND" = x""],
+     [AC_MSG_ERROR(
+       [valgrind tests are enabled but valgrind was not found in PATH ($PATH)])])])
+#------------------------------------------------------------------------------
 AC_CONFIG_FILES([
     Makefile
     samsung-ipc.pc
@@ -40,7 +57,8 @@ AC_CONFIG_FILES([
 
 
 #------------------------------------------------------------------------------
-AS_IF([test x"debug" = x"yes"], [: ${CFLAGS="-ggdb -O0"}], [])
+AS_IF([test x"$valgrind_tests" = x"yes"], [: ${CFLAGS="-ggdb3 -O0"}],
+      [test x"debug" = x"yes"], [: ${CFLAGS="-ggdb -O0"}], [])
 
 AC_PROG_CC
 AM_PROG_CC_C_O
@@ -65,6 +83,8 @@ echo
 echo "  debug build.............: $debug"
 echo
 echo "  prefix..................: $prefix"
+echo
+echo "  valgrind tests..........: $valgrind_tests"
 echo
 echo "------------------------------------------------------------------------"
 echo

@@ -13,6 +13,9 @@ bin_PROGRAMS = \
 
 # TODO: Find a way to make test more modular and represent each run of the
 # nv_data-imei in TEST while having it implemented in a single python file
+if WANT_VALGRIND_CHECKING
+AM_TESTS_ENVIRONMENT = VALGRIND='$(VALGRIND)'; export VALGRIND;
+endif
 PY_LOG_COMPILER = $(PYTHON)
 TEST_EXTENSIONS = .py
 TESTS = tests/ipc-modem.py \

@@ -49,8 +49,18 @@ class IpcModem(object):
                 + os.sep \
                 + 'ipc-modem'
 
-        ipc_modem = sh.Command(command_path)
-        self.ipc_modem = ipc_modem.bake('--dry-run')
+        if 'VALGRIND' in os.environ:
+            self.timeout = 60
+            ipc_modem = sh.Command(os.environ['VALGRIND'])
+            self.ipc_modem = ipc_modem.bake('-v',
+                                            '--log-file=valgrind.%p.log',
+                                            '--leak-check=full',
+                                            command_path,
+                                            '--dry-run')
+        else:
+            self.timeout = 3
+            ipc_modem = sh.Command(command_path)
+            self.ipc_modem = ipc_modem.bake('--dry-run')
 
     def test_help(self):
         try:
@@ -60,16 +70,28 @@ class IpcModem(object):
         else:
             raise Exception()
 
-    def test_boot(self, timeout=2):
+    def test_boot(self, timeout=None):
+        if timeout==None:
+            timeout = self.timeout
+
         self.ipc_modem('boot',  _timeout=timeout)
 
-    def test_power_on(self, timeout=2):
+    def test_power_on(self, timeout=None):
+        if timeout==None:
+            timeout = self.timeout
+
         self.ipc_modem('power-on',  _timeout=timeout)
 
-    def test_power_off(self, timeout=2):
+    def test_power_off(self, timeout=None):
+        if timeout==None:
+            timeout = self.timeout
+
         self.ipc_modem('power-off', _timeout=timeout)
 
-    def test_start(self, timeout=3):
+    def test_start(self, timeout=None):
+        if timeout==None:
+            timeout = self.timeout
+
         try:
             self.ipc_modem('start',  _timeout=timeout)
         except sh.TimeoutException:
@@ -77,7 +99,10 @@ class IpcModem(object):
         else:
             raise Exception()
 
-    def test_call_with_number(self, timeout=3):
+    def test_call_with_number(self, timeout=None):
+        if timeout==None:
+            timeout = self.timeout
+
         expected_output = "[I] Got call number!"
         output = ""
         try:
@@ -90,7 +115,10 @@ class IpcModem(object):
         if output != expected_output:
             raise Exception()
 
-    def test_call_without_number(self, timeout=3):
+    def test_call_without_number(self, timeout=None):
+        if timeout==None:
+            timeout = self.timeout
+
         expected_output = "[E] Missing call number"
         output = get_output(self.ipc_modem('power-on',
                                            '--call=',
