@@ -54,6 +54,8 @@ class NvDataImei(object):
         else:
             command_path = os.path.dirname(sys.argv[0]) \
                 + os.sep \
+                + '..'   \
+                + os.sep \
                 + 'nv_data-imei'
 
         self.nv_data_imei = sh.Command(command_path)

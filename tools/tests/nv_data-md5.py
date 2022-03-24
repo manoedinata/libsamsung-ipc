@@ -40,6 +40,8 @@ class NvDataMD5(object):
         else:
             command_path = os.path.dirname(sys.argv[0]) \
                 + os.sep \
+                + '..'   \
+                + os.sep \
                 + 'nv_data-md5'
 
         self.nv_data_md5 = sh.Command(command_path)

@@ -45,6 +45,8 @@ class IpcModem(object):
         else:
             command_path = os.path.dirname(sys.argv[0]) \
                 + os.sep \
+                + '..'   \
+                + os.sep \
                 + 'ipc-modem'
 
         ipc_modem = sh.Command(command_path)
