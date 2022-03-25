@@ -28,6 +28,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <strings.h>
+#include <sysexits.h>
 #include <syslog.h>
 #include <termios.h>
 #include <unistd.h>
@@ -622,7 +623,7 @@ int handle_command(struct ipc_modem_data *data)
 				      MODEM_LOG_ERROR,
 				      "Something went wrong\n");
 			modem_stop(data->client);
-			return 1;
+			return EX_UNAVAILABLE;
 		}
 		ipc_modem_log(data->client,
 			      "1",
@@ -674,7 +675,7 @@ int parse_cmdline_opts(struct ipc_modem_data *data, int argc, char *argv[])
 
 	if (argc < 2) {
 		print_help();
-		exit(1);
+		exit(EX_USAGE);
 	}
 
 	/* Handle options arguments */
@@ -688,20 +689,29 @@ int parse_cmdline_opts(struct ipc_modem_data *data, int argc, char *argv[])
 				if (strlen(optarg) < 14) {
 					assert(strlen(optarg) <
 					       sizeof(data->call_number));
-					printf("[I] Got call number!\n");
+					ipc_modem_log(data->client,
+						      MODEM_LOG_INFO,
+						      "Got call number!\n");
 					strcpy(data->call_number, optarg);
 				} else {
-					printf("[E] "
-					       "Call number is too long!\n");
-					return 1;
+					ipc_modem_log(
+						data->client,
+						MODEM_LOG_ERROR,
+						"Call number is too long!\n");
+					return EX_USAGE;
 				}
 			}
 		} else if ((strcmp(opt_l[opt_i].name, "log-target") == 0)) {
-			if (optarg && !strcmp(optarg, "syslog")) {
-				log_target = LOG_TO_SYSLOG;
-			} else if (optarg && strcmp(optarg, "stdout")) {
-				printf("[E] Invalid log target '%s'\n", optarg);
-				return 1;
+			if (optarg) {
+				if (!strcmp(optarg, "syslog")) {
+					log_target = LOG_TO_SYSLOG;
+				} else if (strcmp(optarg, "stdout")) {
+					ipc_modem_log(
+						data->client, MODEM_LOG_ERROR,
+						"Invalid log target '%s'\n",
+						optarg);
+					return EX_USAGE;
+				}
 			}
 		} else if (strcmp(opt_l[opt_i].name, "debug") == 0) {
 			data->debug = true;
@@ -709,18 +719,22 @@ int parse_cmdline_opts(struct ipc_modem_data *data, int argc, char *argv[])
 			data->dry_run = true;
 		} else if (strncmp(opt_l[opt_i].name, "help", 4) == 0) {
 			print_help();
-			exit(1);
+			exit(0);
 		} else if ((strcmp(opt_l[opt_i].name, "pin") == 0) &&
 			   (optarg)) {
 			if (strlen(optarg) < 8) {
 				assert(strlen(optarg) <
 				       sizeof(data->sim_pin));
 
-				printf("[I] Got SIM PIN!\n");
+				ipc_modem_log(
+					data->client,
+					MODEM_LOG_INFO, "Got SIM PIN!\n");
 				strcpy(data->sim_pin, optarg);
 			} else {
-				printf("[E] SIM PIN is too long!\n");
-				return 1;
+				ipc_modem_log(data->client,
+					      MODEM_LOG_ERROR,
+					      "SIM PIN is too long!\n");
+				return EX_USAGE;
 			}
 		}
 	}
@@ -745,19 +759,21 @@ int parse_cmdline_opts(struct ipc_modem_data *data, int argc, char *argv[])
 				      "Unknown argument: '%s'\n",
 				      argv[optind]);
 			print_help();
-			return 1;
+			return EX_USAGE;
 		}
 
 		optind++;
 	}
 
 	if (data->command == CMD_NONE) {
-		printf("\n"
-		       "Error: No command given. You need to use a command.\n"
-		       "       See the help below for more details.\n"
-		       "\n");
+		ipc_modem_log(
+			data->client, MODEM_LOG_ERROR,
+			"\n"
+			"Error: No command given. You need to use a command.\n"
+			"       See the help below for more details.\n"
+			"\n");
 		print_help();
-		return 1;
+		return EX_USAGE;
 	}
 
 	return 0;
@@ -781,9 +797,21 @@ int main(int argc, char *argv[])
 		data.client = ipc_client_create(IPC_CLIENT_TYPE_FMT);
 
 		if (data.client == 0) {
-			printf("[E] "
-			       "Could not create IPC client; aborting ...\n");
-			return 1;
+			data.client = ipc_client_create(IPC_CLIENT_TYPE_DUMMY);
+			if (data.client)
+				ipc_modem_log(
+					data.client,
+					MODEM_LOG_ERROR,
+					"Could not create IPC client; "
+					"aborting ...\n");
+			else
+				ipc_modem_log(
+					data.client,
+					MODEM_LOG_ERROR,
+					"Could not create IPC client; "
+					"aborting ...\n");
+
+			return EX_UNAVAILABLE;
 		}
 	}
 

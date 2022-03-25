@@ -22,6 +22,11 @@ import re
 import sys
 import sh
 
+# sysexits.h
+class SysExit(object):
+    #define EX_USAGE        64      /* command line usage error */
+    EX_USAGE = sh.ErrorReturnCode_64
+
 def usage(progname):
     print('{} [test]'.format(progname))
     sys.exit(1)
@@ -48,7 +53,7 @@ class IpcModem(object):
     def test_help(self):
         try:
             self.ipc_modem()
-        except sh.ErrorReturnCode_1:
+        except SysExit.EX_USAGE:
             pass
         else:
             raise Exception()
