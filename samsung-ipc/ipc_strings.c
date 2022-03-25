@@ -383,7 +383,7 @@ const char *ipc_group_string(unsigned char group)
 		return "IPC_GROUP_GEN";
 	default:
 		snprintf((char *) &group_string, sizeof(group_string), "0x%02x",
-			 (unsigned int)group_string);
+			 (unsigned int)group);
 		return group_string;
 	}
 }
