@@ -72,6 +72,7 @@
    " -Werror=sequence-point"
    " -Winit-self"
    " -Wno-unused"
+   " -Wpedantic"
    " -Wpointer-arith"
    " -Wunused"
    " -Wunused-function"))
