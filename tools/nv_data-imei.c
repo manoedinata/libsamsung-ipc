@@ -84,7 +84,7 @@ static int list_supported(void)
 	return 0;
 }
 
-static int get_offset(struct command *command, void *arg)
+static int get_offset(const struct command *command, void *arg)
 {
 	struct offset *offset = arg;
 	size_t i;
@@ -146,7 +146,7 @@ static int get_offset(struct command *command, void *arg)
 	return 0;
 }
 
-static int get_imei(struct command *command, void *arg)
+static int get_imei(const struct command *command, void *arg)
 {
 	struct imei *imei = arg;
 
@@ -213,7 +213,7 @@ static int get_imei(struct command *command, void *arg)
 	return 0;
 }
 
-static struct command_option commands_options[] = {
+static const struct command_option commands_options[] = {
 	{
 		OPTION_FILE,
 		"",
@@ -245,7 +245,7 @@ static struct command_option commands_options[] = {
 	{ 0 },
 };
 
-static struct command commands[] = {
+static const struct command commands[] = {
 	{
 		"list-supported",
 		"Display supported devices and EFS",
@@ -348,12 +348,12 @@ static void print_warnings(void)
 }
 
 /* TODO: Enforce type to only allow valid OPTION_* */
-static void *get_option(uint8_t given_option)
+static const struct command_option *get_option(uint8_t given_option)
 {
 	int i = 0;
 
 	while (true) {
-		struct command_option *command_option =
+		const struct command_option *command_option =
 			&(commands_options[i++]);
 
 		/* TODO: Get C to do something like if (!option) */
@@ -372,7 +372,7 @@ static int print_all_options(void)
 	int i = 0;
 
 	while (true) {
-		struct command_option *option = &(commands_options[i++]);
+		const struct command_option *option = &(commands_options[i++]);
 
 		/* TODO: Get C to do something like if (!option) */
 		if (!option->option)
@@ -402,7 +402,7 @@ static int nv_data_imei_help(void)
 	printf("Commands:\n");
 
 	while (true) {
-		struct command *cmd = &(commands[i++]);
+		const struct command *cmd = &(commands[i++]);
 
 		/* TODO: Get C to do something like if (!cmd) */
 		if (!cmd->name)
@@ -419,12 +419,12 @@ static int nv_data_imei_help(void)
 	return 0;
 }
 
-static void *get_command(const char *name)
+static const struct command *get_command(const char *name)
 {
 	int i = 0;
 
 	while (true) {
-		struct command *cmd = &(commands[i++]);
+		const struct command *cmd = &(commands[i++]);
 
 		/* TODO: Get C to do something like if (!cmd) */
 		if (!cmd->name)
@@ -444,7 +444,7 @@ static void *get_command(const char *name)
 static int command_help(const char *command_name)
 {
 
-	struct command *command;
+	const struct command *command;
 	size_t i;
 
 	command = get_command(command_name);
@@ -462,8 +462,8 @@ static int command_help(const char *command_name)
 			if (command->options & BIT(i)) {
 				bool required = !!(command->required_options &
 						   BIT(i));
-				struct command_option *option = get_option(
-					command->options & BIT(i));
+				const struct command_option *option =
+					get_option(command->options & BIT(i));
 
 				/* Check if option and commands are in sync */
 				assert(option != NULL);
@@ -486,8 +486,8 @@ static int command_help(const char *command_name)
 		printf("Options:\n");
 		for (i = 0; i < (8 * sizeof(command->options)); i++) {
 			if (command->options & BIT(i)) {
-				struct command_option *option = get_option(
-					command->options & BIT(i));
+				const struct command_option *option =
+					get_option(command->options & BIT(i));
 
 				/* Check if option and commands are in sync */
 				assert(option != NULL);
@@ -510,8 +510,8 @@ static int command_help(const char *command_name)
 	if (command->options) {
 		for (i = 0; i < (8 * sizeof(command->options)); i++) {
 			if (command->required_options & BIT(i)) {
-				struct command_option *option = get_option(
-					command->options & BIT(i));
+				const struct command_option *option =
+					get_option(command->options & BIT(i));
 
 				/* Check if option and commands are in sync */
 				assert(option != NULL);
@@ -843,9 +843,9 @@ int main(int argc, char * const argv[])
 	opterr = 0;
 	struct imei imei;
 	struct offset offset;
-	struct command *command = NULL;
-	struct command_option *option = NULL;
-	char *nv_data_path;
+	const struct command *command = NULL;
+	const struct command_option *option = NULL;
+	char *nv_data_path = NULL;
 	int c, rc;
 
 	memset(&imei, 0, sizeof(imei));

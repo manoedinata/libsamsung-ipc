@@ -66,7 +66,7 @@ struct command_option {
 	const char *option_string;
 	const char *help;
 	const char *example;
-	int (*get_data)(struct command *command, void *arg);
+	int (*get_data)(const struct command *command, void *arg);
 };
 
 #define NO_OPTIONS	0
