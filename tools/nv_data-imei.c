@@ -242,7 +242,7 @@ static struct command_option commands_options[] = {
 		"--imei=355921041234567",
 		get_imei,
 	},
-	{ /* Sentinel */ },
+	{ 0 },
 };
 
 static struct command commands[] = {
@@ -274,7 +274,7 @@ static struct command commands[] = {
 		OPTION_FILE|OPTION_IMEI,
 		bruteforce_imei_offset,
 	},
-	{ /* Sentinel */ },
+	{ 0 },
 };
 
 #if DEBUG
