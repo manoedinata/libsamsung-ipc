@@ -180,7 +180,7 @@ static int get_imei(struct command *command, void *arg)
 				       imei->optarg);
 				printf("In addition it is also invalid"
 				       " as it is composed of "
-				       "%d digits instead of %d.\n",
+				       "%zd digits instead of %d.\n",
 				       len, IMEI_LENGTH);
 				return -EINVAL;
 			} else if (!str_is_digit) {
@@ -192,7 +192,7 @@ static int get_imei(struct command *command, void *arg)
 			} else if (!str_len_valid) {
 				printf("The '%s' "
 				       "IMEI is invalid as it is composed of "
-				       "%d digits instead of %d.\n",
+				       "%zd digits instead of %d.\n",
 				       imei->optarg, len, IMEI_LENGTH);
 				return -EINVAL;
 			}
