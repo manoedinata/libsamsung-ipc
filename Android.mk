@@ -113,9 +113,11 @@ libsamsung_ipc_local_c_includes := \
 	$(LOCAL_PATH)/samsung-ipc \
 	external/openssl/include
 
-libsamsung_local_cflags := \
-	-DIPC_DEVICE_NAME=\"$(ipc_device_name)\" \
-	-DDEBUG
+libsamsung_local_cflags := -DDEBUG
+
+ifneq ($(TARGET_DEVICE),)
+libsamsung_local_cflags += -DIPC_DEVICE_NAME=\"$(ipc_device_name)\"
+endif # ifneq ($(TARGET_DEVICE),)
 
 libsamsung_ipc_local_shared_libraries := \
 	libutils \
