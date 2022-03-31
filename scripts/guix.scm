@@ -116,7 +116,9 @@
            (lambda _
              (substitute* (find-files "." ".*\\.py$")
                (("/usr/bin/env python") (which "python3")))
-           #t)))))
+           #t)))
+       #:configure-flags
+       (list "--enable-debug")))
     (synopsis "libsamsung-ipc is a free software implementation of the Samsung IPC modem protocol")
     (description
      "libsamsung-ipc is a free software implementation of the Samsung IPC modem protocol,
@@ -158,6 +160,8 @@ found in many Samsung smartphones and tablets.")
                                    (substitute* (find-files "." ".*\\.py$")
                                                 (("/usr/bin/env python") (which "python3")))
                                    #t)))
+      #:configure-flags
+      (list "--enable-debug")
       #:make-flags (list ,%common-strict-cflags)))))
 
 (define-public libsamsung-ipc-clang-autotools
@@ -181,6 +185,8 @@ found in many Samsung smartphones and tablets.")
              (substitute* (find-files "." ".*\\.py$")
                (("/usr/bin/env python") (which "python3")))
              #t)))
+     #:configure-flags
+     (list "--enable-debug")
      #:make-flags (list ,%common-strict-cflags ,%clang-strict-cflags)))))
 
 (define-public libsamsung-ipc-clang-android
