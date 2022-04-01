@@ -1,10 +1,10 @@
 NULL =
 
 AM_CFLAGS = \
-        -I$(top_srcdir)/include \
-        -I$(top_srcdir)/samsung-ipc \
-        $(OPENSSL_CFLAGS) \
-        $(NULL)
+	-I$(top_srcdir)/include \
+	-I$(top_srcdir)/samsung-ipc \
+	$(OPENSSL_CFLAGS) \
+	$(NULL)
 
 if WANT_DEBUG
 AM_CFLAGS += -ggdb -O0 -DDEBUG
