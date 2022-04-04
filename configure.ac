@@ -5,16 +5,6 @@ AM_INIT_AUTOMAKE([dist-bzip2 dist-xz subdir-objects])
 XZ_OPT=-v9e
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 
-AC_PROG_CC
-AM_PROG_CC_C_O
-AC_GNU_SOURCE
-AC_DISABLE_STATIC
-AC_PROG_LIBTOOL
-
-AC_SUBST(CFLAGS)
-AC_SUBST(CPPFLAGS)
-AC_SUBST(LDFLAGS)
-
 OPENSSL_REQUIRED=1.0.0e
 
 #------------------------------------------------------------------------------
@@ -47,8 +37,22 @@ AC_CONFIG_FILES([
     samsung-ipc/tests/Makefile
     tools/Makefile
 ])
-AC_OUTPUT
 
+
+#------------------------------------------------------------------------------
+AS_IF([test x"debug" = x"yes"], [: ${CFLAGS="-ggdb -O0"}], [])
+
+AC_PROG_CC
+AM_PROG_CC_C_O
+AC_GNU_SOURCE
+AC_DISABLE_STATIC
+AC_PROG_LIBTOOL
+
+AC_SUBST(CFLAGS)
+AC_SUBST(CPPFLAGS)
+AC_SUBST(LDFLAGS)
+
+AC_OUTPUT
 #------------------------------------------------------------------------------
 # info
 

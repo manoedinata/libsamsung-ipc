@@ -7,7 +7,7 @@ AM_CFLAGS = \
 	$(NULL)
 
 if WANT_DEBUG
-AM_CFLAGS += -ggdb -O0 -DDEBUG
+AM_CFLAGS += -DDEBUG
 endif
 
 lib_LTLIBRARIES = \
