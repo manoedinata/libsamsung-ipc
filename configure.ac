@@ -6,7 +6,7 @@ XZ_OPT=-v9e
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 
 OPENSSL_REQUIRED=1.0.0e
-LIBCURL_REQUIRED=7.78.0
+LIBCURL_REQUIRED=7.62.0
 
 #------------------------------------------------------------------------------
 # pkg-config

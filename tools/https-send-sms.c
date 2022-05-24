@@ -24,12 +24,17 @@
 
 #include <curl/curl.h>
 
-int send_https(char *url, __attribute__((unused)) char *post_data)
+/* CURL documentation for curl_easy_escape[1] mentions that "This
+ * function does not accept input strings longer than
+ * CURL_MAX_INPUT_LENGTH (8 MB)." but CURL_MAX_INPUT_LENGTH is not
+ * exported in the curl public headers (in /usr/include/curl).
+ */
+#define CURL_MAX_INPUT_LENGTH 8000000
+
+int send_https(CURL *hnd, char *url, __attribute__((unused)) char *post_data)
 {
 	CURLcode ret;
-	CURL *hnd;
 
-	hnd = curl_easy_init();
 	curl_easy_setopt(hnd, CURLOPT_BUFFERSIZE, 102400L);
 	curl_easy_setopt(hnd, CURLOPT_URL, url);
 	curl_easy_setopt(hnd, CURLOPT_NOPROGRESS, 1L);
@@ -40,9 +45,6 @@ int send_https(char *url, __attribute__((unused)) char *post_data)
 	curl_easy_setopt(hnd, CURLOPT_TCP_KEEPALIVE, 1L);
 
 	ret = curl_easy_perform(hnd);
-
-	curl_easy_cleanup(hnd);
-	hnd = NULL;
 
 	/*
 	 * TODO: HTTP(s) return codes:
@@ -58,13 +60,19 @@ int send_https(char *url, __attribute__((unused)) char *post_data)
 	return (int)ret;
 }
 
-int create_parameter(char **out, const char *parameter, const char *value)
+int create_parameter(CURL *hnd,
+		     char **out, const char *parameter, const char *value)
 {
 	char *result = NULL;
+	char *encoded_value;
 	size_t size = 0;
 	size_t rc;
 
-	rc = snprintf(result, size, "%s=%s", parameter, value);
+	assert(strlen(value) < CURL_MAX_INPUT_LENGTH);
+	encoded_value = curl_easy_escape(hnd, value, 0);
+	assert(encoded_value != NULL);
+
+	rc = snprintf(result, size, "%s=%s", parameter, encoded_value);
 
 	assert(rc > 0);
 	size = rc;
@@ -76,10 +84,14 @@ int create_parameter(char **out, const char *parameter, const char *value)
 		return rc;
 	}
 
-	rc = snprintf(result, size + 1, "%s=%s", parameter, value);
+	rc = snprintf(result, size + 1, "%s=%s", parameter, encoded_value);
 	assert(rc == size);
 
+	assert(rc < CURL_MAX_INPUT_LENGTH);
+
 	*out = result;
+
+	curl_free(encoded_value);
 
 	return 0;
 }
@@ -87,41 +99,43 @@ int create_parameter(char **out, const char *parameter, const char *value)
 int send_sms_get(const char *username, const char *password,
 		 const char *message)
 {
-	int rc;
+	CURL *hnd;
 	char *parameter = NULL;
-	CURLU *url = curl_url();
+	int rc;
+	CURLU *url;
 	char *url_string;
+
+	url = curl_url();
+	hnd = curl_easy_init();
 
 	rc = curl_url_set(url, CURLUPART_URL,
 			  "https://smsapi.free-mobile.fr/sendmsg", 0);
 	assert(rc == 0);
 
-	rc = create_parameter(&parameter, "user", username);
+	rc = create_parameter(hnd, &parameter, "user", username);
 	assert(rc == 0);
-	rc = curl_url_set(url, CURLUPART_QUERY, parameter,
-			  CURLU_URLENCODE|CURLU_APPENDQUERY);
-	assert(rc == 0);
-	free(parameter);
-
-	rc = create_parameter(&parameter, "pass", password);
-	rc = curl_url_set(url, CURLUPART_QUERY, parameter,
-			  CURLU_URLENCODE|CURLU_APPENDQUERY);
+	rc = curl_url_set(url, CURLUPART_QUERY, parameter, CURLU_APPENDQUERY);
 	assert(rc == 0);
 	free(parameter);
 
-	rc = create_parameter(&parameter, "msg", message);
-	rc = curl_url_set(url, CURLUPART_QUERY, parameter,
-			  CURLU_URLENCODE|CURLU_APPENDQUERY|CURLU_ALLOW_SPACE);
+	rc = create_parameter(hnd, &parameter, "pass", password);
+	rc = curl_url_set(url, CURLUPART_QUERY, parameter, CURLU_APPENDQUERY);
+	assert(rc == 0);
+	free(parameter);
+
+	rc = create_parameter(hnd, &parameter, "msg", message);
+	rc = curl_url_set(url, CURLUPART_QUERY, parameter, CURLU_APPENDQUERY);
 	assert(rc == 0);
 	free(parameter);
 
 	rc = curl_url_get(url, CURLUPART_URL, &url_string, 0);
 	assert(rc == 0);
 
-	rc = send_https(url_string, NULL);
+	rc = send_https(hnd, url_string, NULL);
 
 	assert(rc == CURLE_OK);
 
+	curl_easy_cleanup(hnd);
 	curl_url_cleanup(url);
 
 	return 0;
