@@ -31,9 +31,10 @@
  */
 #define CURL_MAX_INPUT_LENGTH 8000000
 
-int send_https(CURL *hnd, char *url, __attribute__((unused)) char *post_data)
+long send_https(CURL *hnd, char *url, __attribute__((unused)) char *post_data)
 {
 	CURLcode ret;
+	long return_code;
 
 	curl_easy_setopt(hnd, CURLOPT_BUFFERSIZE, 102400L);
 	curl_easy_setopt(hnd, CURLOPT_URL, url);
@@ -45,19 +46,11 @@ int send_https(CURL *hnd, char *url, __attribute__((unused)) char *post_data)
 	curl_easy_setopt(hnd, CURLOPT_TCP_KEEPALIVE, 1L);
 
 	ret = curl_easy_perform(hnd);
+	assert(ret == CURLE_OK);
 
-	/*
-	 * TODO: HTTP(s) return codes:
-	 * 200: SMS sent
-	 * 400: missing parameter (user, login, message)
-	 * 402: Too many SMS sent in too little time
-	 * 403: Possible causes:
-	 *      - Service is not enabled inside user account web interface
-	 *      - Wrong login or password
-	 * 500: Server error => Retry later
-	 */
+	curl_easy_getinfo(hnd, CURLINFO_RESPONSE_CODE, &return_code);
 
-	return (int)ret;
+	return return_code;
 }
 
 int create_parameter(CURL *hnd,
@@ -133,12 +126,47 @@ int send_sms_get(const char *username, const char *password,
 
 	rc = send_https(hnd, url_string, NULL);
 
-	assert(rc == CURLE_OK);
+	switch (rc) {
+	case 200:
+		/* SMS SENT */
+		rc = 0;
+		break;
+	case 400:
+		printf("Error %d: %s\n",
+		       rc,
+		       "Missing parameter (user, login, message).");
+		rc = EX_USAGE;
+		break;
+	case 402:
+		printf("Error %d: %s\n",
+		       rc,
+		       "Too many SMS sent in too little time: Retry later.\n");
+		rc = EX_TEMPFAIL;
+		break;
+	case 403:
+		printf("Error %d: %s\n",
+		       rc,
+		       "Possible causes:\n"
+		       "- Service is not enabled in your account settings.\n"
+		       "- Wrong login or password.\n");
+		rc = EX_CONFIG;
+		break;
+	case 500:
+		printf("Error %d: %s\n",
+		       rc,
+		       "Service unavailable: Retry later");
+		rc = EX_UNAVAILABLE;
+		break;
+	default:
+		printf("Unknown error %d.\n", rc);
+		rc = EX_PROTOCOL;
+		break;
+	}
 
 	curl_easy_cleanup(hnd);
 	curl_url_cleanup(url);
 
-	return 0;
+	return rc;
 }
 
 void usage(char *progname)
