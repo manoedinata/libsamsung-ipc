@@ -13,6 +13,12 @@
 /tools/test-suite.log
 valgrind.*.log
 
+# scripts/PKGBUILD
+/scripts/libsamsung-ipc-git-*.pkg.tar.xz
+/scripts/libsamsung-ipc-git-debug-*.pkg.tar.xz
+/scripts/pkg/**
+/scripts/src/**
+
 # Text editors
 \#.*\#
 *~
