@@ -11,6 +11,7 @@
 /tools/nv_data-md5.log
 /tools/nv_data-md5.trs
 /tools/test-suite.log
+valgrind.*.log
 
 # Text editors
 \#.*\#
