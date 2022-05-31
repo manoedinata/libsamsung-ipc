@@ -5,11 +5,18 @@
 /samsung-ipc/tests/test-suite.log
 /test-driver
 /tools/ipc-modem.log
+/tools/ipc-modem/tests/ipc-modem.log
+/tools/ipc-modem/tests/ipc-modem.trs
+/tools/ipc-modem/test-suite.log
 /tools/ipc-modem.trs
 /tools/nv_data-imei.log
 /tools/nv_data-imei.trs
 /tools/nv_data-md5.log
 /tools/nv_data-md5.trs
+/tools/tests/nv_data-imei.log
+/tools/tests/nv_data-imei.trs
+/tools/tests/nv_data-md5.log
+/tools/tests/nv_data-md5.trs
 /tools/test-suite.log
 valgrind.*.log
 
@@ -18,6 +25,12 @@ valgrind.*.log
 /scripts/libsamsung-ipc-git-debug-*.pkg.tar.xz
 /scripts/pkg/**
 /scripts/src/**
+
+# Tools
+/tools/ipc-modem/ipc-modem
+/tools/ipc-test
+/tools/nv_data-imei
+/tools/nv_data-md5
 
 # Text editors
 \#.*\#
@@ -54,7 +67,3 @@ INSTALL
 *.pc
 build
 core
-tools/ipc-modem/ipc-modem
-ipc-test
-nv_data-imei
-nv_data-md5
