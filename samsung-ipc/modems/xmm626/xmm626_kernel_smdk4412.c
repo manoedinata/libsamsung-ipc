@@ -19,11 +19,13 @@
  */
 
 #define _GNU_SOURCE
-#include <stdlib.h>
-#include <stdio.h>
-#include <unistd.h>
-#include <string.h>
+
 #include <fcntl.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+
 #include <sys/ioctl.h>
 #include <sys/select.h>
 
