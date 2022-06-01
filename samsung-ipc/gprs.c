@@ -35,7 +35,7 @@ int ipc_gprs_define_pdp_context_setup(
 	data->cid = cid;
 	data->magic = 0x02;
 
-	strncpy((char *) data->apn, apn, sizeof(data->apn));
+	memcpy(data->apn, apn, sizeof(data->apn));
 
 	return 0;
 }
