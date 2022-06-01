@@ -56,9 +56,9 @@ int ipc_gprs_pdp_context_request_set_setup(
 		data->magic1[2] = 0x13;
 		data->magic2 = 0x01;
 
-		strncpy((char *) data->username, username,
+		memcpy(data->username, username,
 			sizeof(data->username));
-		strncpy((char *) data->password, password,
+		memcpy(data->password, password,
 			sizeof(data->password));
 	}
 
