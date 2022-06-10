@@ -92,6 +92,11 @@ echo "------------------------------------------------------------------------"
 echo "$PACKAGE_NAME $PACKAGE_VERSION"
 echo "------------------------------------------------------------------------"
 echo
+echo "Compiler flags:"
+echo
+echo "  CFLAGS..................: $CFLAGS"
+echo
+echo
 echo "Configuration Options:"
 echo
 echo "  debug build.............: $debug"
