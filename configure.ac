@@ -72,7 +72,7 @@ AC_CONFIG_FILES([
 
 #------------------------------------------------------------------------------
 AS_IF([test x"$valgrind_tests" = x"yes"], [: ${CFLAGS="-ggdb3 -O0"}],
-      [test x"debug" = x"yes"], [: ${CFLAGS="-ggdb -O0"}], [])
+      [test x"$debug" = x"yes"], [: ${CFLAGS="-ggdb -O0"}], [])
 
 AC_PROG_CC
 AM_PROG_CC_C_O
