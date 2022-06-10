@@ -4,6 +4,10 @@ AM_CFLAGS = \
 	-I$(top_srcdir)/include \
 	$(NULL)
 
+if WANT_STRICT_CFLAGS
+AM_CFLAGS += $(STRICT_CFLAGS)
+endif
+
 bin_PROGRAMS = ipc-modem
 
 # TODO: Find a way to make test more modular and represent each run of the

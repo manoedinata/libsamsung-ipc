@@ -65,20 +65,11 @@
  (gnu packages valgrind))
 
 (define %common-strict-cflags
-  (string-append
-   " CFLAGS="
-   " -W"
-   " -Wall"
-   " -Werror"
-   " -Werror=address"
-   " -Werror=return-type"
-   " -Werror=sequence-point"
-   " -Winit-self"
-   " -Wno-unused"
-   " -Wpedantic"
-   " -Wpointer-arith"
-   " -Wunused"
-   " -Wunused-function"))
+  (let* ((port (open-input-pipe
+                "./strict-cflags.sh"))
+         (str  (read-line port)))
+    (close-pipe port)
+    (string-append "CFLAGS=" str)))
 
 (define %clang-strict-cflags
   (string-append

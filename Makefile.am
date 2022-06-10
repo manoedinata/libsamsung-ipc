@@ -14,6 +14,8 @@ pkgconfig_DATA = samsung-ipc.pc
 EXTRA_DIST = \
 	MAINTAINERS \
 	samsung-ipc.pc \
+	strict-cflags.sh \
+	tools/include/glibc/sysexits.h \
 	$(NULL)
 
 MAINTAINERCLEANFILES = \

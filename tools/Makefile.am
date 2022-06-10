@@ -5,6 +5,10 @@ AM_CFLAGS = \
 	$(LIBCURL_CFLAGS) \
 	$(NULL)
 
+if WANT_STRICT_CFLAGS
+AM_CFLAGS += $(STRICT_CFLAGS)
+endif
+
 bin_PROGRAMS = \
 	https-send-sms \
 	ipc-test \

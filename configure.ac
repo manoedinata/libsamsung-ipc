@@ -21,6 +21,10 @@ AC_SUBST(OPENSSL_CFLAGS)
 AC_SUBST(OPENSSL_LIBS)
 
 #------------------------------------------------------------------------------
+# strict cflags
+AC_SUBST(STRICT_CFLAGS)
+
+#------------------------------------------------------------------------------
 # valgrind
 AC_SUBST(VALGRIND)
 
@@ -41,6 +45,14 @@ AC_ARG_ENABLE(debug,
   [debug=$enableval],
   [debug="no"])
 AM_CONDITIONAL( [WANT_DEBUG], [test x"$debug" = x"yes"])
+
+#------------------------------------------------------------------------------
+AC_ARG_ENABLE(strict-cflags,
+  [AS_HELP_STRING([--enable-strict-cflags],
+                  [Build with strict cflags (default=disabled)])],
+  [strict_cflags=$enableval],
+  [strict_cflags="no"])
+AM_CONDITIONAL( [WANT_STRICT_CFLAGS], [test x"$strict_cflags" = x"yes"])
 
 #------------------------------------------------------------------------------
 # TODO: GCC has --enable-checking= for extensive runtime checks and one of the
@@ -88,6 +100,9 @@ AC_CONFIG_FILES([
 
 
 #------------------------------------------------------------------------------
+AS_IF([test x"$strict_cflags" = x"yes"],
+      [STRICT_CFLAGS=`$srcdir/strict-cflags.sh`], [])
+
 AS_IF([test x"$valgrind_tests" = x"yes"], [: ${CFLAGS="-ggdb3 -O0"}],
       [test x"$debug" = x"yes"], [: ${CFLAGS="-ggdb -O0"}], [])
 
@@ -111,7 +126,7 @@ echo "------------------------------------------------------------------------"
 echo
 echo "Compiler flags:"
 echo
-echo "  CFLAGS..................: $CFLAGS"
+echo "  CFLAGS..................: $CFLAGS $STRICT_CFLAGS"
 echo
 echo
 echo "Configuration Options:"
@@ -127,4 +142,3 @@ echo
 echo "------------------------------------------------------------------------"
 echo
 echo "Now type 'make' to compile and 'make install' to install this package."
-
