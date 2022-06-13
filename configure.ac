@@ -25,6 +25,10 @@ AC_SUBST(OPENSSL_LIBS)
 AC_SUBST(VALGRIND)
 
 #------------------------------------------------------------------------------
+# ipc device name
+AC_SUBST([IPC_DEVICE_NAME], [all])
+
+#------------------------------------------------------------------------------
 # libcurl
 PKG_CHECK_MODULES(LIBCURL, libcurl >= $LIBCURL_REQUIRED)
 AC_SUBST(LIBCURL_CFLAGS)
@@ -59,6 +63,19 @@ AS_IF([test x"$valgrind_tests" = x"yes"],
      [AC_MSG_ERROR(
        [valgrind tests are enabled but valgrind was not found in PATH ($PATH)])])])
 #------------------------------------------------------------------------------
+AC_ARG_ENABLE(samsung-ipc-device,
+  [  --enable-samsung-ipc-device=[DEVICE]
+                          make libsamsung-ipc assumes that it runs on DEVICE
+                          DEVICE={all,aries,crespo,galaxys2,herolte,i9300,maguro,n5100,n7100,piranha} (default=all)],
+  [AS_CASE([$enableval],
+            [aries|crespo|galaxys2|herolte|i9300|maguro|n5100|n7100|piranha],
+            [IPC_DEVICE_NAME=$enableval],
+            [AC_MSG_ERROR([Unnown device $enableval])])],
+  [IPC_DEVICE_NAME="all"])
+
+AM_CONDITIONAL( [WANT_IPC_DEVICE_NAME], [test x"$IPC_DEVICE_NAME" != x"all"])
+#------------------------------------------------------------------------------
+
 AC_CONFIG_FILES([
     Makefile
     samsung-ipc.pc
@@ -100,6 +117,8 @@ echo
 echo "Configuration Options:"
 echo
 echo "  debug build.............: $debug"
+echo
+echo "  device(s)...............: $IPC_DEVICE_NAME"
 echo
 echo "  prefix..................: $prefix"
 echo

@@ -10,6 +10,10 @@ if WANT_DEBUG
 AM_CFLAGS += -DDEBUG
 endif
 
+if WANT_IPC_DEVICE_NAME
+AM_CFLAGS += -DIPC_DEVICE_NAME=\"$(IPC_DEVICE_NAME)\"
+endif
+
 lib_LTLIBRARIES = \
 	libsamsung-ipc.la \
 	$(NULL)
