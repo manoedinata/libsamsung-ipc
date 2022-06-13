@@ -759,11 +759,8 @@ int main(int argc, char *argv[])
 					"Could not create IPC client; "
 					"aborting ...\n");
 			else
-				ipc_modem_log(
-					data.client,
-					MODEM_LOG_ERROR,
-					"Could not create IPC client; "
-					"aborting ...\n");
+				printf("Could not create IPC client; "
+				       "aborting ...\n");
 
 			return EX_UNAVAILABLE;
 		}
