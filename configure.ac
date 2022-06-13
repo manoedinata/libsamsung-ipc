@@ -23,7 +23,7 @@ AC_SUBST(VALGRIND)
 #------------------------------------------------------------------------------
 # check for debugging
 AC_ARG_ENABLE(debug,
-  [  --enable-debug          Enable debug build (default=disabled)],
+  [AS_HELP_STRING([--enable-debug], [Enable debug build (default=disabled)])],
   [debug=$enableval],
   [debug="no"])
 AM_CONDITIONAL( [WANT_DEBUG], [test x"$debug" = x"yes"])
@@ -32,8 +32,11 @@ AM_CONDITIONAL( [WANT_DEBUG], [test x"$debug" = x"yes"])
 # TODO: GCC has --enable-checking= for extensive runtime checks and one of the
 #       available values is valgrind, so it would be a good idea to convert to
 #       it for consistency across free software projects.
-AC_ARG_ENABLE(valgrind-tests,
-  [  --enable-valgrind-tests  Build with -ggdb3, -O0 and use valgrind from PATH during tests (default=disabled)],
+AC_ARG_ENABLE(
+  [valgrind-tests],
+  [AS_HELP_STRING([--enable-valgrind-tests],
+                  [Build with -ggdb3, -O0 and use valgrind from PATH during
+                   tests (default=disabled)])],
   [valgrind_tests=$enableval],
   [valgrind_tests="no"])
 
