@@ -582,11 +582,17 @@ char *xmm626_kernel_smdk4412_gprs_get_iface(
 	__attribute__((unused)) struct ipc_client *client, unsigned int cid)
 {
 	char *iface = NULL;
+	int rc;
 
 	if (cid > XMM626_SEC_MODEM_GPRS_IFACE_COUNT)
 		return NULL;
 
-	asprintf(&iface, "%s%d", XMM626_SEC_MODEM_GPRS_IFACE_PREFIX, cid - 1);
+	rc = asprintf(&iface, "%s%d",
+		      XMM626_SEC_MODEM_GPRS_IFACE_PREFIX, cid - 1);
+	if (rc == -1) {
+		ipc_client_log(client, "%s: asprintf failed", __func__);
+		return NULL;
+	}
 
 	return iface;
 }
