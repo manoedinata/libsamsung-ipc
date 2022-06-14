@@ -43,13 +43,35 @@ static char const * const dummy_modem_image_paths[] = {
 };
 
 
-int create_dummy_modem_image(__attribute__((unused)) struct ipc_client *client,
+int create_dummy_modem_image(struct ipc_client *client,
 			     __attribute__((unused)) const char * const path)
 {
+	int rc;
+
+	rc = mkdir("/tmp/", 0755);
+	if (rc == -1) {
+		rc = errno;
+		if (rc != EEXIST)
+			ipc_client_log(client,
+				       "%s: mkdir %s failed with error %d: %s",
+				       __func__, "/tmp/", rc, strerror(rc));
+	}
+
+	rc = mkdir("/tmp/libsamsung-ipc.55f4731d2e11e85bd889/", 0755);
+	if (rc == -1) {
+		rc = errno;
+		if (rc != EEXIST) {
+			ipc_client_log(client,
+				       "%s: mkdir %s failed with error %d: %s",
+				       __func__,
+				       "/tmp/libsamsung-ipc.55f4731d2e11e85bd889/",
+				       rc, strerror(rc));
+		}
+	}
+
 	/* TODO: replace it by C code but make sure that the replacement code
 	 * is as robust as the shell commands
 	 */
-	system("mkdir -p /tmp/libsamsung-ipc.55f4731d2e11e85bd889/");
 	system("touch /tmp/libsamsung-ipc.55f4731d2e11e85bd889/modem.img");
 
 	return 0;
