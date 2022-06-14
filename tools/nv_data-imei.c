@@ -766,7 +766,11 @@ int write_imei(char *nv_data_path, struct offset *offset,
 	assert(imei->imei);
 	assert(strlen(imei->imei) == IMEI_LENGTH);
 
-	asprintf(&md5_path, "%s.md5", nv_data_path);
+	rc = asprintf(&md5_path, "%s.md5", nv_data_path);
+	if (rc == -1) {
+		ipc_client_log(client, "%s: asprintf failed", __func__);
+		return -1;
+	}
 
 	/* We only support one device so far */
 	nv_data_secret = XMM616_NV_DATA_SECRET;
