@@ -42,7 +42,7 @@ build() {
   ../../autogen.sh
   ../../configure \
     --prefix=/usr \
-    --enable-debug --enable-valgrind-tests
+    --enable-debug --enable-valgrind-tests --enable-strict-cflags
   make
 }
 
