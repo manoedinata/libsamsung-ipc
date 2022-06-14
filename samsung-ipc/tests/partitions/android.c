@@ -46,6 +46,7 @@ static char const * const dummy_modem_image_paths[] = {
 int create_dummy_modem_image(struct ipc_client *client,
 			     __attribute__((unused)) const char * const path)
 {
+	int fd;
 	int rc;
 
 	rc = mkdir("/tmp/", 0755);
@@ -69,10 +70,26 @@ int create_dummy_modem_image(struct ipc_client *client,
 		}
 	}
 
-	/* TODO: replace it by C code but make sure that the replacement code
-	 * is as robust as the shell commands
-	 */
-	system("touch /tmp/libsamsung-ipc.55f4731d2e11e85bd889/modem.img");
+	fd = open("/tmp/libsamsung-ipc.55f4731d2e11e85bd889/modem.img",
+		  O_CREAT, 0755);
+	if (fd == -1) {
+		rc = errno;
+		ipc_client_log(client,
+			       "%s: open %s failed with error %d: %s",
+			       __func__,
+			       "/tmp/libsamsung-ipc.55f4731d2e11e85bd889/modem.img",
+			       rc, strerror(rc));
+	}
+
+	rc = close(fd);
+	if (rc == -1) {
+		rc = errno;
+		ipc_client_log(client,
+			       "%s: close %s failed with error %d: %s",
+			       __func__,
+			       "/tmp/libsamsung-ipc.55f4731d2e11e85bd889/modem.img",
+			       rc, strerror(rc));
+	}
 
 	return 0;
 }
