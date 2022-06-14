@@ -553,13 +553,17 @@ int crespo_gprs_deactivate(__attribute__((unused)) struct ipc_client *client,
 	return 0;
 }
 
-char *crespo_gprs_get_iface_single(
-	__attribute__((unused)) struct ipc_client *client,
-	__attribute__((unused)) unsigned int cid)
+char *crespo_gprs_get_iface_single(struct ipc_client *client,
+				   __attribute__((unused)) unsigned int cid)
 {
 	char *iface = NULL;
+	int rc;
 
-	asprintf(&iface, "%s%d", CRESPO_GPRS_IFACE_PREFIX, 0);
+	rc = asprintf(&iface, "%s%d", CRESPO_GPRS_IFACE_PREFIX, 0);
+	if (rc == -1) {
+		ipc_client_log(client, "%s: asprintf failed", __func__);
+		return NULL;
+	}
 
 	return iface;
 }
