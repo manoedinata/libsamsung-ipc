@@ -7,7 +7,7 @@ https://git.replicant.us/replicant/hardware_replicant_libsamsung-ipc
 Policies
 --------
 While at the time of writing, Replicant is the main user of libsamsung-ipc, and
-maintain it, libsamsung-ipc usage is not limited to Replicant nor Android.
+maintains it, libsamsung-ipc usage is not limited to Replicant nor Android.
 
 In the past, libsamsung-ipc was used in the SHR GNU/Linux distribution
 as well, with the freesmartphone.org middleware.
