@@ -12,6 +12,8 @@ pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = samsung-ipc.pc
 
 EXTRA_DIST = \
+	Android.mk \
+	android_versions.mk \
 	MAINTAINERS \
 	samsung-ipc.pc \
 	strict-cflags.sh \
