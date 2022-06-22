@@ -15,6 +15,7 @@ EXTRA_DIST = \
 	Android.mk \
 	android_versions.mk \
 	CONTRIBUTING \
+	INSTALL \
 	MAINTAINERS \
 	samsung-ipc.pc \
 	strict-cflags.sh \
