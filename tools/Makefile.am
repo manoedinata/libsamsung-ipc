@@ -39,6 +39,6 @@ nv_data_md5_SOURCES = nv_data-md5.c
 nv_data_md5_LDADD = $(top_builddir)/samsung-ipc/libsamsung-ipc.la
 nv_data_md5_LDFLAGS =
 
-nv_data_imei_SOURCES = nv_data-imei.c
+nv_data_imei_SOURCES = nv_data-imei.c nv_data-imei.h
 nv_data_imei_LDADD = $(top_builddir)/samsung-ipc/libsamsung-ipc.la
 nv_data_imei_LDFLAGS =
