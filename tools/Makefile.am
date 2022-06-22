@@ -1,4 +1,5 @@
 NULL =
+EXTRA_DIST = $(NULL)
 
 AM_CFLAGS = \
 	-I$(top_srcdir)/include \
@@ -26,6 +27,7 @@ TEST_EXTENSIONS = .py
 TESTS = \
 	tests/nv_data-imei.py \
 	tests/nv_data-md5.py
+EXTRA_DIST += $(TESTS)
 
 https_send_sms_SOURCES = https-send-sms.c
 https_send_sms_LDADD = $(LIBCURL_LIBS)

@@ -1,4 +1,5 @@
 NULL =
+EXTRA_DIST = $(NULL)
 
 AM_CFLAGS = \
 	-I$(top_srcdir)/include \
@@ -34,3 +35,4 @@ endif
 PY_LOG_COMPILER = $(PYTHON)
 TEST_EXTENSIONS = .py
 TESTS = libsamsung-ipc-test.py
+EXTRA_DIST += $(TESTS)

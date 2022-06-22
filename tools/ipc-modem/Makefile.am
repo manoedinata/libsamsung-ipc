@@ -1,4 +1,5 @@
 NULL =
+EXTRA_DIST = $(NULL)
 
 AM_CFLAGS = \
 	-I$(top_srcdir)/include \
@@ -15,6 +16,7 @@ bin_PROGRAMS = ipc-modem
 PY_LOG_COMPILER = $(PYTHON)
 TEST_EXTENSIONS = .py
 TESTS = tests/ipc-modem.py
+EXTRA_DIST += $(TESTS)
 
 ipc_modem_SOURCES = \
 ipc-modem.c \
