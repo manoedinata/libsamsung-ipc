@@ -34,7 +34,7 @@ valgrind.*.log
 /tools/nv_data-md5
 
 # Text editors
-\#.*\#
+\#*\#
 *~
 
 Makefile.in
