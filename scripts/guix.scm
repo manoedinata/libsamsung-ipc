@@ -44,6 +44,8 @@
 (use-modules
  (ice-9 popen)
  (ice-9 rdelim)
+ (ice-9 regex)
+ (ice-9 textual-ports)
  (sxml ssax input-parse)
  ((guix licenses) #:prefix license:)
  (guix build-system android-ndk)
@@ -51,8 +53,12 @@
  (guix gexp)
  (guix git-download)
  (guix packages)
+ (guix profiles)
+ (guix transformations)
+ (gnu packages)
  (gnu packages android)
  (gnu packages autotools)
+ (gnu packages base)
  (gnu packages commencement)
  (gnu packages curl)
  (gnu packages disk)
@@ -63,6 +69,43 @@
  (gnu packages python-xyz)
  (gnu packages tls)
  (gnu packages valgrind))
+
+;; We need a more recent version of android-make-stub as it now
+;; support passing LOCAL_MODULE= to make to build specific local
+;; modules. This is needed because android-make-stub doesn't handle
+;; dependencies, so we need to make sure that libsamsung-ipc is built
+;; first. In addition we need a fix to make the applications that
+;; depend on libsamsung-ipc find libsamsung-ipc's includes directory.
+(define with-fixed-android-make-stub
+  (options->transformation
+   '((with-commit
+      .
+      "android-make-stub=4bc0e068c32fe525741da00af064ddc079de7e4b"))))
+
+(define (parse-android.mk port modules-list)
+  (let* ((line (read-line port)))
+    (if (not (eof-object? line))
+        (let* ((line-parts (string-split line #\ )))
+          (if (string=? (car line-parts) "LOCAL_MODULE")
+              (if (not (string=? (list-ref line-parts 2) "libsamsung-ipc"))
+                  (if (string=? modules-list "")
+                      (parse-android.mk
+                       port
+                       (list-ref line-parts 2))
+                      (parse-android.mk
+                       port
+                       (string-append modules-list
+                                      " " (list-ref line-parts 2))))
+                  (parse-android.mk port modules-list))
+              (parse-android.mk port modules-list)))
+        modules-list)))
+
+(define android-local-modules-list
+  (let* ((port (open-input-file
+                "./Android.mk"))
+         (local-modules (parse-android.mk port "")))
+    (close-input-port port)
+    (string-split local-modules #\ )))
 
 (define %common-strict-cflags
   (let* ((port (open-input-pipe
@@ -86,6 +129,56 @@
   (local-file
     (dirname (dirname (current-filename)))
    #:recursive? #t))
+
+(define android-make
+  #~(lambda (target android-local-modules)
+    (lambda*
+     (#:key inputs
+      make-flags
+      native-inputs
+      outputs
+      #:allow-other-keys)
+     (substitute*
+      "Android.mk"
+      (("BUILD_SHARED_LIBRARY")
+       "BUILD_HOST_SHARED_LIBRARY")
+      (("BUILD_EXECUTABLE") "BUILD_HOST_EXECUTABLE"))
+     ((assoc-ref %standard-phases target)
+      #:inputs inputs
+      #:outputs outputs
+      ;; TODO: use pkg-config for -lssl -lcrypto
+      #:make-flags
+      (append
+       make-flags
+       '("LDFLAGS=-lssl -lcrypto"
+	 "LOCAL_MODULE=libsamsung-ipc"
+	 "SO=libsamsung-ipc.so")))
+     (map-in-order
+      (lambda (local-module)
+	((assoc-ref %standard-phases target)
+	 #:inputs inputs
+	 #:outputs outputs
+	 ;; TODO: use pkg-config for -lssl -lcrypto
+	 #:make-flags
+	 (append
+	  make-flags
+	  (list
+	   (string-append
+	    "LDFLAGS=-Wl,-rpath="
+	    #$output
+	    "/lib -lssl -lcrypto -L .")
+	   (string-append "LOCAL_MODULE="
+			  local-module)))))
+      android-local-modules))))
+
+(define android-phases
+  #~(modify-phases
+     %standard-phases
+     (delete 'bootstrap)
+     (replace 'build
+	      (#$android-make 'build '#$android-local-modules-list))
+     (replace 'install
+	      (#$android-make 'install '#$android-local-modules-list))))
 
 (define-public libsamsung-ipc
   (package
@@ -140,20 +233,13 @@ found in many Samsung smartphones and tablets.")
     (build-system android-ndk-build-system)
     (inputs
      `(("android-libutils" ,android-libutils)
-       ("libcrypto" ,openssl)))
+       ("libcrypto" ,openssl)
+       ("libcurl" ,curl)))
     (native-inputs '())
     (arguments
-     `(#:phases
-       (modify-phases %standard-phases
-         (delete 'bootstrap)
-         (add-before 'build 'patch-host
-           (lambda _
-             (substitute* "Android.mk"
-               (("BUILD_SHARED_LIBRARY") "BUILD_HOST_SHARED_LIBRARY")
-               (("BUILD_STATIC_LIBRARY") "BUILD_HOST_STATIC_LIBRARY")
-               (("BUILD_STATIC_EXECUTABLE") "BUILD_HOST_STATIC_EXECUTABLE"))
-             #t)))
-       #:make-flags (list ,%common-strict-cflags)))))
+     (list
+      #:make-flags #~(list #$%common-strict-cflags #$%clang-strict-cflags)
+      #:phases android-phases))))
 
 (define-public libsamsung-ipc-gcc-autotools
   (package
@@ -205,24 +291,13 @@ found in many Samsung smartphones and tablets.")
     (inputs
      `(("android-libutils" ,android-libutils)
        ("libcrypto" ,openssl)
+       ("libcurl" ,curl)
        ("clang" ,clang)))
     (native-inputs '())
     (arguments
-     `(#:phases
-       (modify-phases %standard-phases
-         (delete 'bootstrap)
-         (add-before 'build 'patch-host
-           (lambda _
-             (substitute* "Android.mk"
-               (("BUILD_SHARED_LIBRARY") "BUILD_HOST_SHARED_LIBRARY")
-               (("BUILD_STATIC_LIBRARY") "BUILD_HOST_STATIC_LIBRARY")
-               (("BUILD_STATIC_EXECUTABLE") "BUILD_HOST_STATIC_EXECUTABLE"))
-             #t))
-         (add-after 'patch-host 'prepare-build-environment
-                    (lambda* (#:key inputs #:allow-other-keys)
-                      (setenv "CC" "clang")
-                      #t)))
-       #:make-flags (list ,%common-strict-cflags ,%clang-strict-cflags)))))
+     (list
+      #:make-flags #~(list #$%common-strict-cflags #$%clang-strict-cflags)
+      #:phases android-phases))))
 
 ;; Combinaisons:
 ;; +--------------------------------+----------+----------+--------------+--------------+
@@ -241,7 +316,7 @@ found in many Samsung smartphones and tablets.")
 ;; +--------------------------------+----------+----------+--------------+--------------+
 
 (list libsamsung-ipc
-      libsamsung-ipc-gcc-android
-      libsamsung-ipc-gcc-autotools
-      libsamsung-ipc-clang-android
-      libsamsung-ipc-clang-autotools)
+      (with-fixed-android-make-stub libsamsung-ipc-clang-android)
+      (with-fixed-android-make-stub libsamsung-ipc-gcc-android)
+      libsamsung-ipc-clang-autotools
+      libsamsung-ipc-gcc-autotools)
