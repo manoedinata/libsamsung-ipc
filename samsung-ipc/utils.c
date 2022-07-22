@@ -295,7 +295,7 @@ int network_iface_up(const char *iface, int domain, int type)
 		return -1;
 
 	memset(&ifr, 0, sizeof(ifr));
-	strncpy(ifr.ifr_name, iface, IFNAMSIZ);
+	memcpy(ifr.ifr_name, iface, IFNAMSIZ);
 
 	fd = socket(domain, type, 0);
 	if (fd < 0)
@@ -334,7 +334,7 @@ int network_iface_down(const char *iface, int domain, int type)
 		return -1;
 
 	memset(&ifr, 0, sizeof(ifr));
-	strncpy(ifr.ifr_name, iface, IFNAMSIZ);
+	memcpy(ifr.ifr_name, iface, IFNAMSIZ);
 
 	fd = socket(domain, type, 0);
 	if (fd < 0)
