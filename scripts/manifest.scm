@@ -23,6 +23,7 @@
 (use-modules
  (gnu packages autotools)
  (gnu packages base)
+ (gnu packages code)
  (gnu packages commencement)
  (gnu packages compression)
  (gnu packages curl)
@@ -46,6 +47,7 @@
  gzip
  gcc-toolchain
  grep
+ lcov
  libtool
  gnu-make
  openssl

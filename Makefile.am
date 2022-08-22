@@ -1,5 +1,7 @@
 NULL =
 
+EXTRA_DIST = $(NULL)
+
 SUBDIRS = \
 	samsung-ipc \
 	samsung-ipc/tests \
@@ -11,7 +13,7 @@ SUBDIRS = \
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = samsung-ipc.pc
 
-EXTRA_DIST = \
+EXTRA_DIST += \
 	Android.mk \
 	android_versions.mk \
 	CONTRIBUTING \
@@ -28,6 +30,18 @@ MAINTAINERCLEANFILES = \
 	Makefile.in missing config.h.in            \
 	mkinstalldirs *~ \
 	$(NULL)
+
+################################################################################
+#                                 Extra checks                                 #
+################################################################################
+
+if WANT_CODE_COVERAGE
+check-local: build-code-coverage check-tarball-builds
+install-data-local: install-code-coverage
+clean-local: clean-code-coverage
+else # WANT_CODE_COVERAGE
+check-local: check-tarball-builds
+endif # WANT_CODE_COVERAGE
 
 # With the next release of libsamsung-ipc, we will also release
 # tarballs.
@@ -46,7 +60,7 @@ MAINTAINERCLEANFILES = \
 # infinite recursion as a given test from a tarball would then spawn
 # another build and test from a tarball which would then spawn again
 # another build and test.
-check-local: dist
+check-tarball-builds: dist
 	if [ -d $(srcdir)/.git ] ; then \
 		BUILD_TMPDIR=`mktemp -d` && \
 		echo $$BUILD_TMPDIR && \
@@ -59,3 +73,39 @@ check-local: dist
 		make install DESTDIR=`realpath $$BUILD_TMPDIR/destdir` && \
 		rm -rf $$BUILD_TMPDIR ; \
 	fi
+
+#################
+# Code coverage #
+#################
+if WANT_CODE_COVERAGE
+
+CODE_COVERAGE_DIR = lcov
+
+EXTRA_DIST += $(CODE_COVERAGE_DIR)
+
+build-code-coverage:
+	lcov --compat-libtool --directory . --capture --output-file libsamsung-ipc.info
+	genhtml -o $(CODE_COVERAGE_DIR) libsamsung-ipc.info
+
+	BUILD_TMPDIR=$(mktemp -d) && \
+	cd ${BUILD_TMPDIR} && \
+	mkdir build destdir && \
+	tar xf $(srcdir)/libsamsung-ipc-$(VERSION).tar.xz && \
+	cd build && \
+	../libsamsung-ipc-$(VERSION)/configure \
+		--enable-code-coverage-tests \
+		--enable-debug \
+		--enable-samsung-ipc-device=fifo \
+	make -j3 check \
+	make install DESTDIR=$(realpath ../destdir)
+
+install-code-coverage: check
+	install -d $(DESTDIR)/$(datadir)/libsamsung-ipc/$(CODE_COVERAGE_DIR)/
+	find $(srcdir)/$(CODE_COVERAGE_DIR) -type f | \
+		xargs -I src install -D src \
+		$(DESTDIR)/$(datadir)/libsamsung-ipc/$(CODE_COVERAGE_DIR)/
+
+clean-code-coverage:
+	rm -rf $(CODE_COVERAGE_DIR)
+
+endif # WANT_CODE_COVERAGE

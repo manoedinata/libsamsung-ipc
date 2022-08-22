@@ -32,7 +32,9 @@ AC_SUBST(STRICT_CFLAGS)
 # python
 AC_SUBST(PYTHON3)
 AC_CHECK_PROG([PYTHON3], [python3], [python3])
-
+#------------------------------------------------------------------------------
+# code coverage
+AC_SUBST(CODE_COVERAGE)
 #------------------------------------------------------------------------------
 # valgrind
 AC_SUBST(VALGRIND)
@@ -62,6 +64,27 @@ AC_ARG_ENABLE(strict-cflags,
   [strict_cflags=$enableval],
   [strict_cflags="no"])
 AM_CONDITIONAL( [WANT_STRICT_CFLAGS], [test x"$strict_cflags" = x"yes"])
+
+#------------------------------------------------------------------------------
+# TODO: GCC has --enable-checking= for extensive runtime checks and one of the
+#       available values is valgrind, so it would be a good idea to convert to
+#       it for consistency across free software projects.
+AC_ARG_ENABLE(
+  [code-coverage-tests],
+  [AS_HELP_STRING([--enable-code-coverage-tests],
+                  [Build with --coverage, -O0 and use lcov from PATH during
+                   tests (default=disabled)])],
+  [code_coverage_tests=$enableval],
+  [code_coverage="no"])
+
+AM_CONDITIONAL( [WANT_CODE_COVERAGE], [test x"$code_coverage_tests" = x"yes"])
+
+AS_IF([test x"code_coverage_tests" = x"yes"],
+  [AC_CHECK_PROG([CODE_COVERAGE], [lcov], [lcov])
+   AS_IF(
+     [test x"$VALGRIND" = x""],
+     [AC_MSG_ERROR(
+       [code coverage tests are enabled but lcov was not found in PATH ($PATH)])])])
 
 #------------------------------------------------------------------------------
 # TODO: GCC has --enable-checking= for extensive runtime checks and one of the
@@ -115,6 +138,12 @@ AS_IF([test x"$strict_cflags" = x"yes"],
 AS_IF([test x"$valgrind_tests" = x"yes"], [: ${CFLAGS="-ggdb3 -O0"}],
       [test x"$debug" = x"yes"], [: ${CFLAGS="-ggdb -O0"}], [])
 
+AS_IF([test x"$code_coverage_tests" = x"yes"],
+      [: ${LDFLAGS=" --coverage"}], [])
+
+AS_IF([test x"$code_coverage_tests" = x"yes"],
+      [ CFLAGS+=" --coverage"], [])
+
 AC_PROG_CC
 AM_PROG_CC_C_O
 AC_GNU_SOURCE
@@ -136,6 +165,7 @@ echo
 echo "Compiler flags:"
 echo
 echo "  CFLAGS..................: $CFLAGS $STRICT_CFLAGS"
+echo "  LDFLAGS.................: $LDFLAGS"
 echo
 echo
 echo "Interpreters paths:"
@@ -153,6 +183,7 @@ echo "  prefix..................: $prefix"
 echo
 echo "  valgrind tests..........: $valgrind_tests"
 echo
+echo "  code coverage tests.....: $code_coverage_tests"
 echo "------------------------------------------------------------------------"
 echo
 echo "Now type 'make' to compile and 'make install' to install this package."
