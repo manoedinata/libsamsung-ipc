@@ -42,6 +42,59 @@ static char const * const dummy_modem_image_paths[] = {
 	NULL
 };
 
+int delete_dummy_modem_image(struct ipc_client *client,
+			     __attribute__((unused)) const char * const path)
+{
+	int rc;
+	char *endp;
+	char *dir;
+
+	rc = unlink(path);
+	if (rc == -1) {
+		rc = errno;
+		if (rc != ENOENT) {
+			ipc_client_log(client,
+				       "%s: unlink %s failed with error %d: %s",
+				       __func__, path, rc, strerror(rc));
+			errno = rc;
+			return -1;
+		}
+	}
+
+	endp = strrchr(path, '/');
+
+	dir = malloc(endp - path + 1);
+	if (dir == NULL) {
+		rc = errno;
+		ipc_client_log(client,
+			       "%s: calloc failed with error %d: %s",
+			       __func__, rc, strerror(rc));
+		errno = rc;
+		return -1;
+
+	}
+
+	memcpy(dir, path, endp - path);
+	dir[endp - path] = '\0';
+
+	rc = rmdir(dir);
+	if (rc == -1) {
+		rc = errno;
+		if (rc != ENOENT) {
+			ipc_client_log(client,
+				       "%s: rmdir %s failed with error %d: %s",
+				       __func__, dir, rc, strerror(rc));
+
+			free(dir);
+			errno = rc;
+			return -1;
+		}
+	}
+
+	free(dir);
+	return 0;
+}
+
 
 int create_dummy_modem_image(struct ipc_client *client,
 			     __attribute__((unused)) const char * const path)
@@ -52,10 +105,12 @@ int create_dummy_modem_image(struct ipc_client *client,
 	rc = mkdir("/tmp/", 0755);
 	if (rc == -1) {
 		rc = errno;
-		if (rc != EEXIST)
+		if (rc != EEXIST) {
 			ipc_client_log(client,
 				       "%s: mkdir %s failed with error %d: %s",
 				       __func__, "/tmp/", rc, strerror(rc));
+			return -1;
+		}
 	}
 
 	rc = mkdir("/tmp/libsamsung-ipc.55f4731d2e11e85bd889/", 0755);
@@ -67,6 +122,7 @@ int create_dummy_modem_image(struct ipc_client *client,
 				       __func__,
 				       "/tmp/libsamsung-ipc.55f4731d2e11e85bd889/",
 				       rc, strerror(rc));
+			return -1;
 		}
 	}
 
@@ -79,6 +135,7 @@ int create_dummy_modem_image(struct ipc_client *client,
 			       __func__,
 			       "/tmp/libsamsung-ipc.55f4731d2e11e85bd889/modem.img",
 			       rc, strerror(rc));
+		goto error;
 	}
 
 	rc = close(fd);
@@ -89,9 +146,19 @@ int create_dummy_modem_image(struct ipc_client *client,
 			       __func__,
 			       "/tmp/libsamsung-ipc.55f4731d2e11e85bd889/modem.img",
 			       rc, strerror(rc));
+		goto error;
 	}
 
 	return 0;
+
+error:
+	rc = delete_dummy_modem_image(
+		client, "/tmp/libsamsung-ipc.55f4731d2e11e85bd889/modem.img");
+	if (rc == -1)
+		ipc_client_log(client,
+			       "%s: delete_dummy_modem_image %s failed with error -1",
+			       __func__);
+	return -1;
 }
 
 int test_open_android_modem_partition(struct ipc_client *client)
@@ -127,6 +194,16 @@ int test_open_android_modem_partition(struct ipc_client *client)
 		rc = errno;
 		ipc_client_log(client,
 			       "%s: close() failed with errror %d: %s\n",
+			       __func__, rc, strerror(rc));
+		return -1;
+	}
+
+	rc = delete_dummy_modem_image(
+		client, "/tmp/libsamsung-ipc.55f4731d2e11e85bd889/modem.img");
+	if (rc == -1) {
+		rc = errno;
+		ipc_client_log(client,
+			       "%s: delete_dummy_modem_image() failed with errror %d: %s\n",
 			       __func__, rc, strerror(rc));
 		return -1;
 	}
