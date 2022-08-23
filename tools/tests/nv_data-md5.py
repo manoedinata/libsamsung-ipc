@@ -76,6 +76,8 @@ class NvDataMD5(object):
         if output != expected_md5:
             raise Exception()
 
+        os.unlink(nv_data_bin)
+
 def main():
     nv_data_md5 = NvDataMD5()
     nv_data_md5.test_help()
