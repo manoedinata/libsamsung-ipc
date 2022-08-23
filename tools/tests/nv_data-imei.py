@@ -130,6 +130,10 @@ class NvDataImei(object):
         else:
             raise Exception()
 
+        os.unlink(inaccessible_nv_data_bin)
+        os.unlink(nv_data_bin)
+        os.unlink(nv_data_bin + '.md5')
+
 def main():
     nv_data_imei = NvDataImei()
     nv_data_imei.test_help()
