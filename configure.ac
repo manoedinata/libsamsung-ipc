@@ -1,4 +1,8 @@
 AC_INIT([libsamsung-ipc], [0.7.0], [replicant@osuosl.org], [libsamsung-ipc])
+
+AC_SUBST(CONFIGURE_ARGUMENTS)
+: ${CONFIGURE_ARGUMENTS="$@"}
+
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS(config.h)
 AM_INIT_AUTOMAKE([dist-bzip2 dist-xz subdir-objects])
