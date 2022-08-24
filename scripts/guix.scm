@@ -202,12 +202,7 @@
     (arguments
      `(#:phases
        (modify-phases %standard-phases
-         (add-before 'build 'patch-python
-           (lambda _
-             (substitute* (find-files "." ".*\\.py$")
-               (("/usr/bin/env python") (which "python3")))
-           #t))
-         (add-after 'patch-python 'fix-valgrind
+         (add-after 'build 'fix-valgrind
            (lambda _
              (substitute* (find-files "." ".*\\.py$")
                           (("'--leak-check=full',")
