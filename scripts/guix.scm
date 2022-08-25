@@ -151,24 +151,24 @@
       (append
        make-flags
        '("LDFLAGS=-lssl -lcrypto"
-	 "LOCAL_MODULE=libsamsung-ipc"
-	 "SO=libsamsung-ipc.so")))
+         "LOCAL_MODULE=libsamsung-ipc"
+         "SO=libsamsung-ipc.so")))
      (map-in-order
       (lambda (local-module)
-	((assoc-ref %standard-phases target)
-	 #:inputs inputs
-	 #:outputs outputs
-	 ;; TODO: use pkg-config for -lssl -lcrypto
-	 #:make-flags
-	 (append
-	  make-flags
-	  (list
-	   (string-append
-	    "LDFLAGS=-Wl,-rpath="
-	    #$output
-	    "/lib -lssl -lcrypto -L .")
-	   (string-append "LOCAL_MODULE="
-			  local-module)))))
+        ((assoc-ref %standard-phases target)
+         #:inputs inputs
+         #:outputs outputs
+         ;; TODO: use pkg-config for -lssl -lcrypto
+         #:make-flags
+         (append
+          make-flags
+          (list
+           (string-append
+            "LDFLAGS=-Wl,-rpath="
+            #$output
+            "/lib -lssl -lcrypto -L .")
+           (string-append "LOCAL_MODULE="
+                          local-module)))))
       android-local-modules))))
 
 (define android-phases
@@ -176,9 +176,9 @@
      %standard-phases
      (delete 'bootstrap)
      (replace 'build
-	      (#$android-make 'build '#$android-local-modules-list))
+              (#$android-make 'build '#$android-local-modules-list))
      (replace 'install
-	      (#$android-make 'install '#$android-local-modules-list))))
+              (#$android-make 'install '#$android-local-modules-list))))
 
 (define-public libsamsung-ipc
   (package
