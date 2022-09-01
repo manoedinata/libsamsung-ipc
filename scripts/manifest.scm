@@ -24,6 +24,7 @@
  (gnu packages autotools)
  (gnu packages base)
  (gnu packages commencement)
+ (gnu packages compression)
  (gnu packages curl)
  (gnu packages disk)
  (gnu packages gawk)
@@ -35,12 +36,14 @@
 (list
  autoconf
  automake
+ bzip2
  coreutils
  curl
  ddrescue
  diffutils
  findutils
  gawk
+ gzip
  gcc-toolchain
  grep
  libtool
@@ -49,4 +52,6 @@
  pkg-config
  python
  python-sh
- sed)
+ sed
+ tar
+ xz)
