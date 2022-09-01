@@ -38,6 +38,7 @@
  coreutils
  curl
  ddrescue
+ diffutils
  gawk
  gcc-toolchain
  grep
