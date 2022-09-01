@@ -39,6 +39,7 @@
  curl
  ddrescue
  diffutils
+ findutils
  gawk
  gcc-toolchain
  grep
