@@ -24,6 +24,7 @@
  (gnu packages autotools)
  (gnu packages base)
  (gnu packages commencement)
+ (gnu packages curl)
  (gnu packages disk)
  (gnu packages gawk)
  (gnu packages pkg-config)
@@ -35,6 +36,7 @@
  autoconf
  automake
  coreutils
+ curl
  ddrescue
  gawk
  gcc-toolchain
