@@ -13,7 +13,7 @@ bin_PROGRAMS = ipc-modem
 
 # TODO: Find a way to make test more modular and represent each run of the
 # ipc-modem in TEST while having it implemented in a single python file
-PY_LOG_COMPILER = $(PYTHON)
+PY_LOG_COMPILER = $(PYTHON3)
 TEST_EXTENSIONS = .py
 TESTS = tests/ipc-modem.py
 EXTRA_DIST += $(TESTS)

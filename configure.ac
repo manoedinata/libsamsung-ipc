@@ -29,6 +29,11 @@ AC_SUBST(OPENSSL_LIBS)
 AC_SUBST(STRICT_CFLAGS)
 
 #------------------------------------------------------------------------------
+# python
+AC_SUBST(PYTHON3)
+AC_CHECK_PROG([PYTHON3], [python3], [python3])
+
+#------------------------------------------------------------------------------
 # valgrind
 AC_SUBST(VALGRIND)
 
@@ -131,6 +136,11 @@ echo
 echo "Compiler flags:"
 echo
 echo "  CFLAGS..................: $CFLAGS $STRICT_CFLAGS"
+echo
+echo
+echo "Interpreters paths:"
+echo
+echo "  PYTHON3..................: $PYTHON3"
 echo
 echo
 echo "Configuration Options:"
