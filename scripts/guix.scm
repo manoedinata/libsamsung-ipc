@@ -187,7 +187,6 @@
     (build-system gnu-build-system)
     (native-inputs (list autoconf
                          automake
-                         curl
                          ddrescue
                          `(,(canonical-package glibc) "debug")
                          libtool
@@ -195,7 +194,7 @@
                          python
                          python-sh
                          valgrind))
-    (inputs (list openssl))
+    (inputs (list curl openssl))
     (arguments
      (list #:phases #~(modify-phases %standard-phases
                         (add-before 'build 'fix-valgrind
@@ -249,7 +248,6 @@ found in many Samsung smartphones and tablets.")
     (name "libsamsung-ipc-gcc-autotools")
     (native-inputs (list autoconf
                          automake
-                         curl
                          ddrescue
                          libtool
                          pkg-config
