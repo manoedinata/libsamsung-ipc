@@ -29,6 +29,10 @@ AC_SUBST(OPENSSL_LIBS)
 AC_SUBST(STRICT_CFLAGS)
 
 #------------------------------------------------------------------------------
+# Static build of test utilities
+AC_SUBST(ALL_STATIC_LDFLAGS)
+
+#------------------------------------------------------------------------------
 # python
 AC_SUBST(PYTHON3)
 AC_CHECK_PROG([PYTHON3], [python3], [python3])
@@ -56,6 +60,14 @@ AC_ARG_ENABLE(debug,
   [debug=$enableval],
   [debug="no"])
 AM_CONDITIONAL( [WANT_DEBUG], [test x"$debug" = x"yes"])
+
+#------------------------------------------------------------------------------
+
+AC_ARG_ENABLE(static-progs,
+  [AS_HELP_STRING([--enable-static-progs],
+                  [Build static (test) tools (default=disabled)])],
+  [static_progs=$enableval],
+  [static_progs="no"])
 
 #------------------------------------------------------------------------------
 AC_ARG_ENABLE(strict-cflags,
@@ -132,6 +144,9 @@ AC_CONFIG_FILES([
 
 
 #------------------------------------------------------------------------------
+AS_IF([test x"$static_progs" = x"yes"],
+      [ALL_STATIC_LDFLAGS=-all-static], [])
+
 AS_IF([test x"$strict_cflags" = x"yes"],
       [STRICT_CFLAGS=`$srcdir/strict-cflags.sh`], [])
 
@@ -153,6 +168,7 @@ AC_PROG_LIBTOOL
 AC_SUBST(CFLAGS)
 AC_SUBST(CPPFLAGS)
 AC_SUBST(LDFLAGS)
+AC_SUBST(ALL_STATIC_LDFLAGS)
 
 AC_OUTPUT
 #------------------------------------------------------------------------------
@@ -165,7 +181,7 @@ echo
 echo "Compiler flags:"
 echo
 echo "  CFLAGS..................: $CFLAGS $STRICT_CFLAGS"
-echo "  LDFLAGS.................: $LDFLAGS"
+echo "  LDFLAGS.................: $LDFLAGS $ALL_STATIC_LDFLAGS"
 echo
 echo
 echo "Interpreters paths:"

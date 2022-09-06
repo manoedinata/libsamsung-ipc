@@ -196,6 +196,72 @@ found in many Samsung smartphones and tablets.")
     (home-page "https://www.replicant.us")
     (license license:gpl2+)))
 
+(define is-file-static
+  #~(lambda (readelf path)
+      ;; str is also eof if the file doesn't exist
+      (if (not (file-exists? tool)) #f
+          (let* ((port (open-input-pipe (string-append readelf " --dyn-syms "
+                                                       path)))
+                 (str (read-line port)))
+            (close-pipe port)
+            (eof-object? str)))))
+
+(define-public libsamsung-ipc-static
+  (package
+    (inherit libsamsung-ipc)
+    (name "libsamsung-ipc-static")
+    (native-inputs (list autoconf
+                         automake
+                         binutils
+                         ddrescue
+                         libtool
+                         pkg-config
+                         python
+                         python-sh))
+    (inputs (list curl openssl
+                  `(,(canonical-package openssl) "static")))
+    (arguments
+     (list #:modules '((ice-9 popen)
+                       (ice-9 rdelim)
+                       (guix build utils)
+                       (guix build gnu-build-system))
+           #:tests? #f
+           #:phases #~(modify-phases %standard-phases
+                        ;; https-send-sms depends on curl and Guix doesn't have
+                        ;; a static libcurl.
+                        (add-after 'unpack 'remove-https-send-sms
+                          (lambda _
+                            (substitute* "tools/Makefile.am"
+                              (("https-send-sms \\\\")
+                               "\\"))))
+                        (add-after 'compress-documentation 'check-static-files
+                          (lambda _
+                            (display "Checking static files:\n")
+                            (map-in-order (lambda (tool)
+                                            (if (#$is-file-static
+                                                 (string-append #$(this-package-native-input
+                                                                   "binutils")
+                                                  "/bin/readelf") tool)
+                                                (display (string-append
+                                                          "[ OK ] "
+                                                          (basename tool) ": "
+                                                          tool "\n"))
+                                                ((lambda _
+                                                   (display (string-append
+                                                             "[ !! ] "
+                                                             (basename tool)
+                                                             ": " tool "\n"))
+                                                   (#f)))))
+                                          (list
+                                           "samsung-ipc/tests/libsamsung-ipc-test"
+                                           "tools/ipc-test"
+                                           "tools/nv_data-imei"
+                                           "tools/nv_data-md5"
+                                           "tools/ipc-modem/ipc-modem")))))
+           #:configure-flags #~(list "--enable-debug" "--enable-static=yes"
+                                     "--enable-shared=no"
+                                     "--enable-static-progs")))))
+
 (define-public libsamsung-ipc-gcc-android
   (package
     (inherit libsamsung-ipc)
@@ -262,6 +328,8 @@ found in many Samsung smartphones and tablets.")
 ;; +--------------------------------+----------+----------+--------------+--------------+
 
 (list libsamsung-ipc
+      libsamsung-ipc-static
       (with-fixed-android-make-stub libsamsung-ipc-clang-android)
       (with-fixed-android-make-stub libsamsung-ipc-gcc-android)
-      libsamsung-ipc-clang-autotools libsamsung-ipc-gcc-autotools)
+      libsamsung-ipc-clang-autotools
+      libsamsung-ipc-gcc-autotools)

@@ -7,6 +7,8 @@ AM_CFLAGS = \
 	$(OPENSSL_CFLAGS) \
 	$(NULL)
 
+AM_LDFLAGS = $(ALL_STATIC_LDFLAGS)
+
 if WANT_STRICT_CFLAGS
 AM_CFLAGS += $(STRICT_CFLAGS)
 endif
@@ -24,7 +26,6 @@ libsamsung_ipc_test_SOURCES = \
 	$(NULL)
 
 libsamsung_ipc_test_LDADD = $(top_builddir)/samsung-ipc/libsamsung-ipc.la
-libsamsung_ipc_test_LDFLAGS =
 
 # TODO: Find a way to make test more modular and represent each run of
 # libsamsung-ipc-test in TEST while having it implemented in a single

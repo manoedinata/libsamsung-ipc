@@ -25,4 +25,4 @@ ipc-modem-log.c \
 ipc-modem-log.h
 
 ipc_modem_LDADD = $(top_builddir)/samsung-ipc/libsamsung-ipc.la
-ipc_modem_LDFLAGS = -lpthread
+ipc_modem_LDFLAGS = -lpthread $(ALL_STATIC_LDFLAGS)

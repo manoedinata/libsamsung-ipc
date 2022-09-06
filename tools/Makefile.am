@@ -6,6 +6,8 @@ AM_CFLAGS = \
 	$(LIBCURL_CFLAGS) \
 	$(NULL)
 
+AM_LDFLAGS = $(ALL_STATIC_LDFLAGS)
+
 if WANT_STRICT_CFLAGS
 AM_CFLAGS += $(STRICT_CFLAGS)
 endif
@@ -31,16 +33,12 @@ EXTRA_DIST += $(TESTS)
 
 https_send_sms_SOURCES = https-send-sms.c
 https_send_sms_LDADD = $(LIBCURL_LIBS)
-https_send_sms_LDFLAGS =
 
 ipc_test_SOURCES = ipc-test.c
 ipc_test_LDADD = $(top_builddir)/samsung-ipc/libsamsung-ipc.la
-ipc_test_LDFLAGS =
 
 nv_data_md5_SOURCES = nv_data-md5.c
 nv_data_md5_LDADD = $(top_builddir)/samsung-ipc/libsamsung-ipc.la
-nv_data_md5_LDFLAGS =
 
 nv_data_imei_SOURCES = nv_data-imei.c nv_data-imei.h
 nv_data_imei_LDADD = $(top_builddir)/samsung-ipc/libsamsung-ipc.la
-nv_data_imei_LDFLAGS =
