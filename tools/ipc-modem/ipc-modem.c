@@ -135,7 +135,7 @@ void modem_get_call_list(struct ipc_modem_data *data)
 
 void modem_exec_power_normal(struct ipc_modem_data *data)
 {
-	uint16_t exec_data = 0x0202;
+	uint16_t exec_data = IPC_PWR_PHONE_STATE_REQUEST_NORMAL;
 
 	ipc_client_send(data->client,
 			seq_get(data), IPC_PWR_PHONE_STATE, IPC_TYPE_EXEC,
