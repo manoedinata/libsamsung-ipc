@@ -255,16 +255,15 @@ found in many Samsung smartphones and tablets.")
                          python-sh
                          clang))
     (arguments
-     `(#:phases
-       (modify-phases %standard-phases
-         (add-before 'build 'patch-python
-           (lambda _
-             (substitute* (find-files "." ".*\\.py$")
-               (("/usr/bin/env python") (which "python3")))
-             #t)))
-     #:configure-flags
-     (list "--enable-debug")
-     #:make-flags (list ,%common-strict-cflags ,%clang-strict-cflags)))))
+     `(#:phases (modify-phases %standard-phases
+                  (add-before 'build 'patch-python
+                    (lambda _
+                      (substitute* (find-files "." ".*\\.py$")
+                        (("/usr/bin/env python")
+                         (which "python3"))) #t)))
+       #:configure-flags (list "--enable-debug")
+       #:make-flags (list ,%common-strict-cflags
+                          ,%clang-strict-cflags)))))
 
 (define-public libsamsung-ipc-clang-android
   (package
