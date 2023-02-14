@@ -276,5 +276,4 @@ found in many Samsung smartphones and tablets.")
 (list libsamsung-ipc
       (with-fixed-android-make-stub libsamsung-ipc-clang-android)
       (with-fixed-android-make-stub libsamsung-ipc-gcc-android)
-      libsamsung-ipc-clang-autotools
-      libsamsung-ipc-gcc-autotools)
+      libsamsung-ipc-clang-autotools libsamsung-ipc-gcc-autotools)
