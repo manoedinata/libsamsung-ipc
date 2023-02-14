@@ -84,20 +84,17 @@
 (define (parse-android.mk port modules-list)
   (let* ((line (read-line port)))
     (if (not (eof-object? line))
-        (let* ((line-parts (string-split line #\ )))
+        (let* ((line-parts (string-split line #\space)))
           (if (string=? (car line-parts) "LOCAL_MODULE")
               (if (not (string=? (list-ref line-parts 2) "libsamsung-ipc"))
                   (if (string=? modules-list "")
-                      (parse-android.mk
-                       port
-                       (list-ref line-parts 2))
-                      (parse-android.mk
-                       port
-                       (string-append modules-list
-                                      " " (list-ref line-parts 2))))
+                      (parse-android.mk port
+                                        (list-ref line-parts 2))
+                      (parse-android.mk port
+                                        (string-append modules-list " "
+                                                       (list-ref line-parts 2))))
                   (parse-android.mk port modules-list))
-              (parse-android.mk port modules-list)))
-        modules-list)))
+              (parse-android.mk port modules-list))) modules-list)))
 
 (define android-local-modules-list
   (let* ((port (open-input-file "./Android.mk"))
