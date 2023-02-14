@@ -107,15 +107,13 @@
     (string-split local-modules #\ )))
 
 (define %common-strict-cflags
-  (let* ((port (open-input-pipe
-                "./strict-cflags.sh"))
-         (str  (read-line port)))
+  (let* ((port (open-input-pipe "./strict-cflags.sh"))
+         (str (read-line port)))
     (close-pipe port)
     (string-append "CFLAGS=" str)))
 
 (define %clang-strict-cflags
-  (string-append
-   "-Werror=non-virtual-dtor"))
+  (string-append "-Werror=non-virtual-dtor"))
 
 (define %commit
   (let* ((port (open-input-pipe
