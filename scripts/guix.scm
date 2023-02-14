@@ -219,7 +219,7 @@ found in many Samsung smartphones and tablets.")
 (define-public libsamsung-ipc-clang-autotools
   (package
     (inherit libsamsung-ipc)
-    (name "libsamsung-ipc-gcc-autotools")
+    (name "libsamsung-ipc-clang-autotools")
     (native-inputs (list autoconf
                          automake
                          ddrescue
