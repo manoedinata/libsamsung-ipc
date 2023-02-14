@@ -59,7 +59,6 @@
  (gnu packages android)
  (gnu packages autotools)
  (gnu packages base)
- (gnu packages commencement)
  (gnu packages curl)
  (gnu packages disk)
  (gnu packages linux)
@@ -186,34 +185,29 @@
     (version (git-version "0.0" "HEAD" %commit))
     (source %local-source)
     (build-system gnu-build-system)
-    (native-inputs
-     `(("autoreconf" ,autoconf)
-       ("aclocal" ,automake)
-       ("ddrescue", ddrescue)
-       ("libc:debug", (@@ (gnu packages commencement) glibc-final) "debug")
-       ("libcurl" ,curl)
-       ("libtool" ,libtool)
-       ("pkgconfig" ,pkg-config)
-       ("python" ,python)
-       ("python-sh" ,python-sh)
-       ("valgrind" ,valgrind)))
-    (inputs
-     `(("openssl" ,openssl)))
+    (native-inputs (list autoconf
+                         automake
+                         curl
+                         ddrescue
+                         `(,(canonical-package glibc) "debug")
+                         libtool
+                         pkg-config
+                         python
+                         python-sh
+                         valgrind))
+    (inputs (list openssl))
     (arguments
-     `(#:phases
-       (modify-phases %standard-phases
-         (add-after 'build 'fix-valgrind
-           (lambda _
-             (substitute* (find-files "." ".*\\.py$")
-                          (("'--leak-check=full',")
-                           (string-append
-                            "'--leak-check=full', '--extra-debuginfo-path="
-                            (assoc-ref %build-inputs "libc:debug")
-                            "/lib/debug',")))
-             #t)))
-       #:configure-flags
-       (list "--enable-debug"
-             "--enable-valgrind-tests")))
+     (list #:phases #~(modify-phases %standard-phases
+                        (add-before 'build 'fix-valgrind
+                          (lambda _
+                            (substitute* (find-files "." ".*\\.py$")
+                              (("'--leak-check=full',")
+                               (string-append
+                                "'--leak-check=full', '--extra-debuginfo-path="
+                                (ungexp (this-package-native-input "glibc")
+                                        "debug") "/lib/debug',"))))))
+           #:configure-flags #~(list "--enable-debug"
+                                     "--enable-valgrind-tests")))
     (synopsis "libsamsung-ipc is a free software implementation of the Samsung IPC modem protocol")
     (description
      "libsamsung-ipc is a free software implementation of the Samsung IPC modem protocol,
@@ -226,10 +220,7 @@ found in many Samsung smartphones and tablets.")
    (inherit libsamsung-ipc)
     (name "libsamsung-ipc-gcc-android")
     (build-system android-ndk-build-system)
-    (inputs
-     `(("android-libutils" ,android-libutils)
-       ("libcrypto" ,openssl)
-       ("libcurl" ,curl)))
+    (inputs (list android-libutils curl openssl))
     (native-inputs '())
     (arguments
      (list
@@ -254,18 +245,17 @@ found in many Samsung smartphones and tablets.")
 
 (define-public libsamsung-ipc-clang-autotools
   (package
-   (inherit libsamsung-ipc)
-   (name "libsamsung-ipc-gcc-autotools")
-    (native-inputs
-     `(("autoreconf" ,autoconf)
-       ("aclocal" ,automake)
-       ("ddrescue", ddrescue)
-       ("libcurl" ,curl)
-       ("libtool" ,libtool)
-       ("pkgconfig" ,pkg-config)
-       ("python" ,python)
-       ("python-sh" ,python-sh)
-       ("clang" ,clang)))
+    (inherit libsamsung-ipc)
+    (name "libsamsung-ipc-gcc-autotools")
+    (native-inputs (list autoconf
+                         automake
+                         curl
+                         ddrescue
+                         libtool
+                         pkg-config
+                         python
+                         python-sh
+                         clang))
     (arguments
      `(#:phases
        (modify-phases %standard-phases
@@ -283,11 +273,7 @@ found in many Samsung smartphones and tablets.")
    (inherit libsamsung-ipc)
     (name "libsamsung-ipc-clang-android")
     (build-system android-ndk-build-system)
-    (inputs
-     `(("android-libutils" ,android-libutils)
-       ("libcrypto" ,openssl)
-       ("libcurl" ,curl)
-       ("clang" ,clang)))
+    (inputs (list android-libutils clang curl openssl))
     (native-inputs '())
     (arguments
      (list
