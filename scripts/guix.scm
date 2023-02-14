@@ -125,9 +125,8 @@
     str))
 
 (define %local-source
-  (local-file
-    (dirname (dirname (current-filename)))
-   #:recursive? #t))
+  (local-file (dirname (dirname (current-filename)))
+              #:recursive? #t))
 
 (define android-make
   #~(lambda (target android-local-modules)
