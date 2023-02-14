@@ -216,15 +216,15 @@ found in many Samsung smartphones and tablets.")
 
 (define-public libsamsung-ipc-gcc-android
   (package
-   (inherit libsamsung-ipc)
+    (inherit libsamsung-ipc)
     (name "libsamsung-ipc-gcc-android")
     (build-system android-ndk-build-system)
     (inputs (list android-libutils curl openssl))
     (native-inputs '())
     (arguments
-     (list
-      #:make-flags #~(list #$%common-strict-cflags #$%clang-strict-cflags)
-      #:phases android-phases))))
+     (list #:make-flags #~(list #$%common-strict-cflags
+                                #$%clang-strict-cflags)
+           #:phases android-phases))))
 
 (define-public libsamsung-ipc-gcc-autotools
   (package
