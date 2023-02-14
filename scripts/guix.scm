@@ -76,10 +76,7 @@
 ;; first. In addition we need a fix to make the applications that
 ;; depend on libsamsung-ipc find libsamsung-ipc's includes directory.
 (define with-fixed-android-make-stub
-  (options->transformation
-   '((with-commit
-      .
-      "android-make-stub=4bc0e068c32fe525741da00af064ddc079de7e4b"))))
+  (options->transformation '((with-commit . "android-make-stub=4bc0e068c32fe525741da00af064ddc079de7e4b"))))
 
 (define (parse-android.mk port modules-list)
   (let* ((line (read-line port)))
