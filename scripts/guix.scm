@@ -131,44 +131,33 @@
 
 (define android-make
   #~(lambda (target android-local-modules)
-    (lambda*
-     (#:key inputs
-      make-flags
-      native-inputs
-      outputs
-      #:allow-other-keys)
-     (substitute*
-      "Android.mk"
-      (("BUILD_SHARED_LIBRARY")
-       "BUILD_HOST_SHARED_LIBRARY")
-      (("BUILD_EXECUTABLE") "BUILD_HOST_EXECUTABLE"))
-     ((assoc-ref %standard-phases target)
-      #:inputs inputs
-      #:outputs outputs
-      ;; TODO: use pkg-config for -lssl -lcrypto
-      #:make-flags
-      (append
-       make-flags
-       '("LDFLAGS=-lssl -lcrypto"
-         "LOCAL_MODULE=libsamsung-ipc"
-         "SO=libsamsung-ipc.so")))
-     (map-in-order
-      (lambda (local-module)
+      (lambda* (#:key inputs make-flags native-inputs outputs
+                #:allow-other-keys)
+        (substitute* "Android.mk"
+          (("BUILD_SHARED_LIBRARY")
+           "BUILD_HOST_SHARED_LIBRARY")
+          (("BUILD_EXECUTABLE")
+           "BUILD_HOST_EXECUTABLE"))
         ((assoc-ref %standard-phases target)
          #:inputs inputs
          #:outputs outputs
-         ;; TODO: use pkg-config for -lssl -lcrypto
-         #:make-flags
-         (append
-          make-flags
-          (list
-           (string-append
-            "LDFLAGS=-Wl,-rpath="
-            #$output
-            "/lib -lssl -lcrypto -L .")
-           (string-append "LOCAL_MODULE="
-                          local-module)))))
-      android-local-modules))))
+         #:make-flags (append make-flags
+                              '("LDFLAGS=-lssl -lcrypto"
+                                "LOCAL_MODULE=libsamsung-ipc"
+                                "SO=libsamsung-ipc.so")))
+        (map-in-order (lambda (local-module)
+                        ((assoc-ref %standard-phases target)
+                         #:inputs inputs
+                         #:outputs outputs
+                         #:make-flags (append make-flags
+                                              (list (string-append
+                                                     "LDFLAGS=-Wl,-rpath="
+                                                     #$output
+                                                     "/lib -lssl -lcrypto -L .")
+                                                    (string-append
+                                                     "LOCAL_MODULE="
+                                                     local-module)))))
+                      android-local-modules))))
 
 (define android-phases
   #~(modify-phases %standard-phases
