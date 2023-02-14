@@ -120,9 +120,8 @@
 (define %commit
   (let* ((port (open-input-pipe
                 "git --no-pager log --oneline HEAD -1 --format='%H'"))
-         (str  (read-line port)))
-    (close-pipe port)
-    str))
+         (str (read-line port)))
+    (close-pipe port) str))
 
 (define %local-source
   (local-file (dirname (dirname (current-filename)))
