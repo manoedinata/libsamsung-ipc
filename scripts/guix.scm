@@ -100,11 +100,10 @@
         modules-list)))
 
 (define android-local-modules-list
-  (let* ((port (open-input-file
-                "./Android.mk"))
+  (let* ((port (open-input-file "./Android.mk"))
          (local-modules (parse-android.mk port "")))
     (close-input-port port)
-    (string-split local-modules #\ )))
+    (string-split local-modules #\space)))
 
 (define %common-strict-cflags
   (let* ((port (open-input-pipe "./strict-cflags.sh"))
