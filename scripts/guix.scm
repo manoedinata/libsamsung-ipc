@@ -171,13 +171,16 @@
       android-local-modules))))
 
 (define android-phases
-  #~(modify-phases
-     %standard-phases
-     (delete 'bootstrap)
-     (replace 'build
-              (#$android-make 'build '#$android-local-modules-list))
-     (replace 'install
-              (#$android-make 'install '#$android-local-modules-list))))
+  #~(modify-phases %standard-phases
+      (delete 'bootstrap)
+      (replace 'build
+        (#$android-make
+         'build
+         '#$android-local-modules-list))
+      (replace 'install
+        (#$android-make
+         'install
+         '#$android-local-modules-list))))
 
 (define-public libsamsung-ipc
   (package
