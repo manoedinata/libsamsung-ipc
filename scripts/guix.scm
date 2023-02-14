@@ -213,14 +213,14 @@ found in many Samsung smartphones and tablets.")
     (inherit libsamsung-ipc)
     (name "libsamsung-ipc-gcc-autotools")
     (arguments
-     `(#:phases (modify-phases %standard-phases
-                  (add-before 'build 'patch-python
-                    (lambda _
-                      (substitute* (find-files "." ".*\\.py$")
-                        (("/usr/bin/env python")
-                         (which "python3"))) #t)))
-       #:configure-flags (list "--enable-debug")
-       #:make-flags (list ,%common-strict-cflags)))))
+     (list #:phases #~(modify-phases %standard-phases
+                        (add-before 'build 'patch-python
+                          (lambda _
+                            (substitute* (find-files "." ".*\\.py$")
+                              (("/usr/bin/env python")
+                               (which "python3"))) #t)))
+           #:configure-flags #~(list "--enable-debug")
+           #:make-flags #~(list #$%common-strict-cflags)))))
 
 (define-public libsamsung-ipc-clang-autotools
   (package
