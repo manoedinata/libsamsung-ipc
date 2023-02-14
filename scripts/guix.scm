@@ -268,15 +268,15 @@ found in many Samsung smartphones and tablets.")
 
 (define-public libsamsung-ipc-clang-android
   (package
-   (inherit libsamsung-ipc)
+    (inherit libsamsung-ipc)
     (name "libsamsung-ipc-clang-android")
     (build-system android-ndk-build-system)
     (inputs (list android-libutils clang curl openssl))
     (native-inputs '())
     (arguments
-     (list
-      #:make-flags #~(list #$%common-strict-cflags #$%clang-strict-cflags)
-      #:phases android-phases))))
+     (list #:make-flags #~(list #$%common-strict-cflags
+                                #$%clang-strict-cflags)
+           #:phases android-phases))))
 
 ;; Combinaisons:
 ;; +--------------------------------+----------+----------+--------------+--------------+
