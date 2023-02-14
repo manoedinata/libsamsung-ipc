@@ -207,7 +207,8 @@
                                         "debug") "/lib/debug',"))))))
            #:configure-flags #~(list "--enable-debug"
                                      "--enable-valgrind-tests")))
-    (synopsis "libsamsung-ipc is a free software implementation of the Samsung IPC modem protocol")
+    (synopsis
+     "libsamsung-ipc is a free software implementation of the Samsung IPC modem protocol")
     (description
      "libsamsung-ipc is a free software implementation of the Samsung IPC modem protocol,
 found in many Samsung smartphones and tablets.")
