@@ -7,7 +7,7 @@ found in many Samsung devices.
 Compilation and installation
 ============================
 
-In orderto compile the source code you need the following software packages
+In order to compile the source code you need the following software packages
 - GCC compiler
 - GNC C library
 - OpenSSL >= 1.0.0e
