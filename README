@@ -11,6 +11,7 @@ In order to compile the source code you need the following software packages
 - GCC compiler
 - GNC C library
 - OpenSSL >= 1.0.0e
+- curl >= 7.62.0
 
 To configure run
     ./configure --prefix=/usr
