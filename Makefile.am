@@ -84,20 +84,12 @@ CODE_COVERAGE_DIR = lcov
 EXTRA_DIST += $(CODE_COVERAGE_DIR)
 
 build-code-coverage:
-	lcov --compat-libtool --directory . --capture --output-file libsamsung-ipc.info
+	lcov \
+		--capture \
+		--compat-libtool \
+		--directory . \
+		--output-file libsamsung-ipc.info
 	genhtml -o $(CODE_COVERAGE_DIR) libsamsung-ipc.info
-
-	BUILD_TMPDIR=$(mktemp -d) && \
-	cd ${BUILD_TMPDIR} && \
-	mkdir build destdir && \
-	tar xf $(srcdir)/libsamsung-ipc-$(VERSION).tar.xz && \
-	cd build && \
-	../libsamsung-ipc-$(VERSION)/configure \
-		--enable-code-coverage-tests \
-		--enable-debug \
-		--enable-samsung-ipc-device=fifo \
-	make -j3 check \
-	make install DESTDIR=$(realpath ../destdir)
 
 install-code-coverage: check
 	install -d $(DESTDIR)/$(datadir)/libsamsung-ipc/$(CODE_COVERAGE_DIR)/
