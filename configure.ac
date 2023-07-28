@@ -126,7 +126,7 @@ AC_ARG_ENABLE(samsung-ipc-device,
   [AS_CASE([$enableval],
             [aries|crespo|galaxys2|herolte|i9300|maguro|n5100|n7100|piranha],
             [IPC_DEVICE_NAME=$enableval],
-            [AC_MSG_ERROR([Unnown device $enableval])])],
+            [AC_MSG_ERROR([Unknown device $enableval])])],
   [IPC_DEVICE_NAME="all"])
 
 AM_CONDITIONAL( [WANT_IPC_DEVICE_NAME], [test x"$IPC_DEVICE_NAME" != x"all"])
