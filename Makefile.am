@@ -68,7 +68,8 @@ check-tarball-builds: dist
 		tar xf $(srcdir)/libsamsung-ipc-$(VERSION).tar.xz \
 		    -C $$BUILD_TMPDIR && \
 		cd $$BUILD_TMPDIR/build && \
-		../libsamsung-ipc-$(VERSION)/configure $(CONFIGURE_ARGUMENTS) && \
+		../libsamsung-ipc-$(VERSION)/configure \
+			$(CONFIGURE_ARGUMENTS) && \
 		make check && \
 		make install DESTDIR=`realpath $$BUILD_TMPDIR/destdir` && \
 		rm -rf $$BUILD_TMPDIR ; \
