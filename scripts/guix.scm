@@ -175,7 +175,7 @@
                          python
                          python-sh
                          valgrind))
-    (inputs (list curl openssl))
+    (inputs (list curl libressl))
     (arguments
      (list #:phases #~(modify-phases %standard-phases
                         (add-before 'build 'fix-valgrind
@@ -218,8 +218,9 @@ found in many Samsung smartphones and tablets.")
                          pkg-config
                          python
                          python-sh))
-    (inputs (list curl openssl
-                  `(,(canonical-package openssl) "static")))
+    ;; The libressl package contains .a in
+    ;; /gnu/store/[...]-libressl-[...]/lib/*.a
+    (inputs (list curl libressl))
     (arguments
      (list #:modules '((ice-9 popen)
                        (ice-9 rdelim)
@@ -267,7 +268,7 @@ found in many Samsung smartphones and tablets.")
     (inherit libsamsung-ipc)
     (name "libsamsung-ipc-gcc-android")
     (build-system android-ndk-build-system)
-    (inputs (list android-libutils curl openssl))
+    (inputs (list android-libutils curl libressl))
     (native-inputs '())
     (arguments
      (list #:make-flags #~(list #$%common-strict-cflags
@@ -304,7 +305,7 @@ found in many Samsung smartphones and tablets.")
     (inherit libsamsung-ipc)
     (name "libsamsung-ipc-clang-android")
     (build-system android-ndk-build-system)
-    (inputs (list android-libutils clang curl openssl))
+    (inputs (list android-libutils clang curl libressl))
     (native-inputs '())
     (arguments
      (list #:make-flags #~(list #$%common-strict-cflags
