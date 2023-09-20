@@ -91,7 +91,7 @@ AC_ARG_ENABLE(
 
 AM_CONDITIONAL( [WANT_CODE_COVERAGE], [test x"$code_coverage_tests" = x"yes"])
 
-AS_IF([test x"code_coverage_tests" = x"yes"],
+AS_IF([test x"$code_coverage_tests" = x"yes"],
   [AC_CHECK_PROG([CODE_COVERAGE], [lcov], [lcov])
    AS_IF(
      [test x"$VALGRIND" = x""],
