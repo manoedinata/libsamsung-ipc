@@ -16,6 +16,8 @@ libsamsung_ipc_test_SOURCES = \
 	main.c \
 	partitions/android.c \
 	partitions/android.h \
+	shannon_data.c \
+	shannon_data.h \
 	$(NULL)
 
 libsamsung_ipc_test_LDADD = $(top_builddir)/samsung-ipc/libsamsung-ipc.la

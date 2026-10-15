@@ -29,6 +29,7 @@
 /* libsamsung-ipc internal headers */
 #include <ipc.h>
 #include "partitions/android.h"
+#include "shannon_data.h"
 
 struct test {
 	char *name;
@@ -39,6 +40,22 @@ static struct test tests[] = {
 	{
 		"open_android_modem_partition",
 		test_open_android_modem_partition
+	},
+	{
+		"shannon_command_numbers",
+		test_shannon_command_numbers
+	},
+	{
+		"net_service_domain_config_setup",
+		test_net_service_domain_config_setup
+	},
+	{
+		"gprs_ps_and_mobile_data_setup",
+		test_gprs_ps_and_mobile_data_setup
+	},
+	{
+		"gprs_lte_attach_apn_info_setup",
+		test_gprs_lte_attach_apn_info_setup
 	},
 };
 

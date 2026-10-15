@@ -23,6 +23,17 @@
 
 #include <samsung-ipc.h>
 
+/*
+ * The modem expects exactly these message sizes (taken from the stock RIL),
+ * make the build fail if a structure ever stops matching them.
+ */
+typedef char ipc_gprs_ps_request_set_data_size_check[
+	(sizeof(struct ipc_gprs_ps_request_set_data) == 3) ? 1 : -1];
+typedef char ipc_gprs_mobile_data_status_data_size_check[
+	(sizeof(struct ipc_gprs_mobile_data_status_data) == 2) ? 1 : -1];
+typedef char ipc_gprs_lte_attach_apn_info_data_size_check[
+	(sizeof(struct ipc_gprs_lte_attach_apn_info_data) == 194) ? 1 : -1];
+
 int ipc_gprs_define_pdp_context_setup(
 	struct ipc_gprs_define_pdp_context_data *data, unsigned char enable,
 	unsigned char cid, const char *apn)
@@ -76,6 +87,66 @@ int ipc_gprs_port_list_setup(struct ipc_gprs_port_list_data *data)
 
 	memset(data, 0, sizeof(struct ipc_gprs_port_list_data));
 	memcpy(data->magic, magic, sizeof(magic));
+
+	return 0;
+}
+
+int ipc_gprs_ps_request_set_setup(struct ipc_gprs_ps_request_set_data *data,
+				  unsigned char attach)
+{
+	if (data == NULL)
+		return -1;
+
+	memset(data, 0, sizeof(struct ipc_gprs_ps_request_set_data));
+	data->attach = attach;
+
+	return 0;
+}
+
+int ipc_gprs_mobile_data_status_setup(
+	struct ipc_gprs_mobile_data_status_data *data, unsigned char enabled,
+	unsigned char roaming_enabled)
+{
+	if (data == NULL)
+		return -1;
+
+	memset(data, 0, sizeof(struct ipc_gprs_mobile_data_status_data));
+	data->enabled = enabled;
+	data->roaming_enabled = roaming_enabled;
+
+	return 0;
+}
+
+int ipc_gprs_lte_attach_apn_info_setup(
+	struct ipc_gprs_lte_attach_apn_info_data *data,
+	unsigned char profile_id, const char *apn, const char *username,
+	const char *password)
+{
+	if (data == NULL || apn == NULL)
+		return -1;
+
+	/* The stock RIL refuses names that do not fit in the fields */
+	if (strlen(apn) > sizeof(data->apn))
+		return -1;
+	if (username != NULL && strlen(username) > sizeof(data->username))
+		return -1;
+	if (password != NULL && strlen(password) > sizeof(data->password))
+		return -1;
+
+	memset(data, 0, sizeof(struct ipc_gprs_lte_attach_apn_info_data));
+	data->type = 1;
+	data->profile_id = profile_id;
+	data->protocol = IPC_GPRS_PROTOCOL_IPV4;
+	data->protocol_roaming = IPC_GPRS_PROTOCOL_IPV4;
+
+	strncpy((char *) data->apn, apn, sizeof(data->apn));
+
+	if (username != NULL)
+		strncpy((char *) data->username, username,
+			sizeof(data->username));
+	if (password != NULL)
+		strncpy((char *) data->password, password,
+			sizeof(data->password));
 
 	return 0;
 }

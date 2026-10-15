@@ -49,6 +49,34 @@
 #define IPC_GPRS_PORT_LIST					0x0D11
 
 /*
+ * Commands only known from Shannon modems (LTE capable, IPC protocol 4.1).
+ *
+ * The numbers and names were recovered from the stock RIL (libsec-ril.so):
+ * the function that turns a command number into a name is a jump table
+ * indexed by the sub command, and the table agrees with every number above
+ * and in net.h. Only the commands that have a structure further down have
+ * had their payload decoded, the others are listed so that they can be named
+ * in logs. Numbers 0x1E to 0x20 are not named by the RIL.
+ */
+#define IPC_GPRS_LTE_QOS_PROFILE				0x0D12
+#define IPC_GPRS_NW_INITIATED_PDN_DISCONNECT			0x0D13
+#define IPC_GPRS_LTE_ATTACH_APN_INFO				0x0D14
+#define IPC_GPRS_EPDG_HANDOVER					0x0D15
+#define IPC_GPRS_EPDG_STATUS					0x0D16
+#define IPC_GPRS_FD_INFORMATION				0x0D17
+#define IPC_GPRS_OPERATOR_RESERVED_PCO				0x0D18
+#define IPC_GPRS_LTE_CA_STATUS					0x0D19
+#define IPC_GPRS_BACKOFF_TIMER					0x0D1A
+#define IPC_GPRS_SET_APN_INFO					0x0D1B
+#define IPC_GPRS_TRAFFIC_CHANNEL_STATUS			0x0D1C
+#define IPC_GPRS_MOBILE_DATA_STATUS				0x0D1D
+#define IPC_GPRS_IMS_TEST_MODE					0x0D21
+#define IPC_GPRS_SET_ALWAYS_ON_PDN				0x0D22
+#define IPC_GPRS_LCE_INFO					0x0D23
+#define IPC_GPRS_LTE_ADVANCED_ICON				0x0D24
+#define IPC_GPRS_SYNC_PROFILE_INFO				0x0D25
+
+/*
  * Values
  */
 
@@ -85,6 +113,19 @@
 #define IPC_GPRS_STATUS_NOT_ENABLED				0x00
 #define IPC_GPRS_STATUS_ENABLED				0x01
 #define IPC_GPRS_STATUS_DISABLED				0x03
+
+/*
+ * Protocol byte used by Shannon modems in the PDP context related commands
+ * (see ipc_gprs_define_pdp_context_data's magic and the attach profile
+ * below). 0x02 is IPv4 only. The RIL also produces 0x04, 0x05 and 0x06 for
+ * its other protocol types and samsungipcd uses 0x06 to ask for IPv6
+ * support, but their exact meaning has not been verified.
+ */
+#define IPC_GPRS_PROTOCOL_IPV4					0x02
+
+/* Value of the first byte of IPC_GPRS_PS set requests. */
+#define IPC_GPRS_PS_ATTACH					0x01
+#define IPC_GPRS_PS_DETACH					0x00
 
 /*
  * Structures
@@ -156,6 +197,59 @@ struct ipc_gprs_port_list_data {
 } __attribute__((__packed__));
 
 /*
+ * Set request of IPC_GPRS_PS (Shannon modems). This is not the layout of the
+ * reply to a get request, see struct ipc_gprs_ps_data for that one. When
+ * detaching, the stock RIL also fills the two other bytes; when attaching it
+ * sends 01 00 00. Layout taken from IpcProtocol41::IpcTxPsAttach().
+ */
+struct ipc_gprs_ps_request_set_data {
+	unsigned char attach;		/* IPC_GPRS_PS_ATTACH or _DETACH */
+	unsigned char detach_flag;
+	unsigned char detach_reason;	/* 0 to 4 */
+} __attribute__((__packed__));
+
+/*
+ * Payload of IPC_GPRS_MOBILE_DATA_STATUS (set), layout taken from
+ * IpcProtocol41::IpcTxSetMobileDataSetting(bool, bool). The name of the
+ * second field is inferred from how the RIL uses it.
+ */
+struct ipc_gprs_mobile_data_status_data {
+	unsigned char enabled;
+	unsigned char roaming_enabled;
+} __attribute__((__packed__));
+
+/*
+ * Payload of IPC_GPRS_LTE_ATTACH_APN_INFO (set): the "initial attach" profile
+ * that the modem uses when it attaches to LTE. Layout (194 bytes) taken from
+ * IpcProtocol41::IpcTxSetLteAttachProfile().
+ *
+ * On a Galaxy J4 (Telkomsel, LTE) this message is required for data: without
+ * it a PDP context activation is acknowledged but never completes and no
+ * IPC_GPRS_IP_CONFIGURATION follows. The content of the APN field was not
+ * checked by that network (an invalid name worked), other networks may well
+ * validate it.
+ *
+ * The fields marked "unknown" are copied by the RIL from optional arguments
+ * (an IPv6 identifier, an IPv4 address, P-CSCF related flags) that the
+ * plain data setup does not use; they are left zero by the helper below.
+ */
+struct ipc_gprs_lte_attach_apn_info_data {
+	unsigned char type;		/* 1, the RIL uses 3 in one case */
+	unsigned char profile_id;
+	unsigned char protocol;		/* IPC_GPRS_PROTOCOL_* */
+	unsigned char apn[101];
+	unsigned char unknown1[16];
+	unsigned char unknown2[4];
+	unsigned char unknown3[2];
+	unsigned char unknown4;
+	unsigned char username[32];
+	unsigned char password[32];
+	unsigned char auth;		/* 0 means no authentication */
+	unsigned char protocol_roaming;	/* IPC_GPRS_PROTOCOL_* */
+	unsigned char unknown5;
+} __attribute__((__packed__));
+
+/*
  * Helpers
  */
 
@@ -167,5 +261,14 @@ int ipc_gprs_pdp_context_request_set_setup(
 	unsigned char enable, unsigned char cid, const char *username,
 	const char *password);
 int ipc_gprs_port_list_setup(struct ipc_gprs_port_list_data *data);
+int ipc_gprs_ps_request_set_setup(struct ipc_gprs_ps_request_set_data *data,
+				  unsigned char attach);
+int ipc_gprs_mobile_data_status_setup(
+	struct ipc_gprs_mobile_data_status_data *data, unsigned char enabled,
+	unsigned char roaming_enabled);
+int ipc_gprs_lte_attach_apn_info_setup(
+	struct ipc_gprs_lte_attach_apn_info_data *data,
+	unsigned char profile_id, const char *apn, const char *username,
+	const char *password);
 
 #endif /* __SAMSUNG_IPC_GPRS_H__ */

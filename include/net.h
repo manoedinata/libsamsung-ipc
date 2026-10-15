@@ -70,6 +70,25 @@
 #define IPC_NET_SERVICE_DOMAIN_GSM				0x02
 #define IPC_NET_SERVICE_DOMAIN_GPRS				0x03
 
+/*
+ * Values of the one byte payload of IPC_NET_SERVICE_DOMAIN_CONFIG, as used
+ * by Shannon modems (observed on a Galaxy J4 / Exynos 7570).
+ *
+ * The stock RIL (libsec-ril.so, IpcProtocol41::IpcTxNetSetServiceDomain() and
+ * IpcRxNetServiceDomain()) converts its internal enum to these values and
+ * back: enum 0 <-> 0x01, enum 1 <-> 0x03, enum 2 <-> 0x02. The names below
+ * are inferred, not taken from the RIL: 0x02 and 0x03 follow the CS/PS
+ * numbering of IPC_NET_SERVICE_DOMAIN_GSM / IPC_NET_SERVICE_DOMAIN_GPRS used
+ * in IPC_NET_REGIST, which leaves 0x01 for "both".
+ *
+ * The modem boots with 0x02 (circuit switched only). In that state it
+ * registers for voice and SMS but never attempts packet registration, so no
+ * data connection can be set up until 0x01 is written.
+ */
+#define IPC_NET_SERVICE_DOMAIN_CONFIG_CS_PS			0x01
+#define IPC_NET_SERVICE_DOMAIN_CONFIG_CS			0x02
+#define IPC_NET_SERVICE_DOMAIN_CONFIG_PS			0x03
+
 #define IPC_NET_REGISTRATION_STATUS_NONE			0x01
 #define IPC_NET_REGISTRATION_STATUS_HOME			0x02
 #define IPC_NET_REGISTRATION_STATUS_SEARCHING			0x03
@@ -127,6 +146,12 @@ struct ipc_net_mode_sel_data {
 	unsigned char mode_sel;	/* IPC_NET_MODE_SEL */
 } __attribute__((__packed__));
 
+/* Payload of IPC_NET_SERVICE_DOMAIN_CONFIG, both for SET and for the reply
+ * to GET. */
+struct ipc_net_service_domain_config_data {
+	unsigned char domain;	/* IPC_NET_SERVICE_DOMAIN_CONFIG_* */
+} __attribute__((__packed__));
+
 /*
  * Helpers
  */
@@ -136,6 +161,8 @@ int ipc_net_plmn_sel_setup(struct ipc_net_plmn_sel_request_data *data,
 			   unsigned char act);
 int ipc_net_regist_setup(struct ipc_net_regist_request_data *data,
 			 unsigned char domain);
+int ipc_net_service_domain_config_setup(
+	struct ipc_net_service_domain_config_data *data, unsigned char domain);
 unsigned char ipc_net_plmn_list_count_extract(const void *data, size_t size);
 struct ipc_net_plmn_list_entry *ipc_net_plmn_list_entry_extract(
 	const void *data, size_t size, unsigned int index);

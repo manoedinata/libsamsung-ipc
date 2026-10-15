@@ -74,6 +74,18 @@ int ipc_net_regist_setup(struct ipc_net_regist_request_data *data,
 	return 0;
 }
 
+int ipc_net_service_domain_config_setup(
+	struct ipc_net_service_domain_config_data *data, unsigned char domain)
+{
+	if (data == NULL)
+		return -1;
+
+	memset(data, 0, sizeof(struct ipc_net_service_domain_config_data));
+	data->domain = domain;
+
+	return 0;
+}
+
 unsigned char ipc_net_plmn_list_count_extract(const void *data, size_t size)
 {
 	struct ipc_net_plmn_list_header *header;
